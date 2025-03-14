@@ -9,8 +9,12 @@ handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
-# Force immediate flushing of log messages
-handler.flush = sys.stdout.flush
+# Force immediate flushing of log messages - safely handle case when stdout flush is not available
+if hasattr(sys.stdout, 'flush') and callable(sys.stdout.flush):
+    handler.flush = sys.stdout.flush
+else:
+    # Define a no-op flush function
+    handler.flush = lambda: None
 
 # Clear any existing handlers and add our configured one
 root = logging.getLogger()
@@ -22,7 +26,11 @@ root.setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Verification message to confirm logging is working
-logger.debug("Logging system initialized")
+try:
+    logger.debug("Logging system initialized")
+except Exception as e:
+    # If logging fails, provide fallback
+    print(f"Failed to initialize logging: {str(e)}")
 
 # Constants
 DEFAULT_CONFIG_FILE = "firebase_config.json"
@@ -57,17 +65,36 @@ def create_default_config():
 
 def get_firebase_config():
     """Load Firebase configuration from file"""
-    logger.info(f"Attempting to load config from: {DEFAULT_CONFIG_FILE}")
-    
-    if not os.path.exists(DEFAULT_CONFIG_FILE):
-        logger.warning(f"Config file {DEFAULT_CONFIG_FILE} not found, creating default")
-        create_default_config()
-        return DEFAULT_CONFIG
-    
     try:
-        with open(DEFAULT_CONFIG_FILE, 'r') as f:
-            config = json.load(f)
-        logger.info("Firebase config loaded successfully")
+        logger.info(f"Attempting to load config from: {DEFAULT_CONFIG_FILE}")
+        
+        # Try different paths for the config file
+        possible_paths = [
+            DEFAULT_CONFIG_FILE,
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', DEFAULT_CONFIG_FILE),
+            os.path.abspath(DEFAULT_CONFIG_FILE)
+        ]
+        
+        # If running as a frozen executable, check the executable directory
+        if getattr(sys, 'frozen', False):
+            executable_dir = os.path.dirname(sys.executable)
+            possible_paths.append(os.path.join(executable_dir, DEFAULT_CONFIG_FILE))
+        
+        # Try each possible path
+        config_found = False
+        for path in possible_paths:
+            logger.info(f"Trying path: {path}")
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    config = json.load(f)
+                logger.info(f"Firebase config loaded successfully from {path}")
+                config_found = True
+                break
+                
+        if not config_found:
+            logger.warning(f"Config file not found in any of the possible locations, creating default")
+            create_default_config()
+            return DEFAULT_CONFIG
         
         # Debug: Print config values (redact sensitive info)
         safe_config = config.copy()
@@ -132,14 +159,40 @@ def initialize_firebase():
             logger.error("Service account key path is empty in config")
             is_initializing = False
             return False
+        
+        # Try different possible paths for the service account file
+        possible_paths = [
+            service_account_path,
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', service_account_path),
+            os.path.abspath(service_account_path)
+        ]
+        
+        # If running as a frozen executable, check the executable directory
+        if getattr(sys, 'frozen', False):
+            executable_dir = os.path.dirname(sys.executable)
+            possible_paths.append(os.path.join(executable_dir, service_account_path))
             
-        if not os.path.exists(service_account_path):
-            logger.error(f"Service account key not found at: {service_account_path}")
+        # Log all paths being checked
+        logger.info(f"Checking the following paths for service account: {possible_paths}")
+        
+        # Try each possible path
+        service_account_found = False
+        actual_path = None
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                service_account_found = True
+                actual_path = path
+                logger.info(f"Found service account at: {path}")
+                break
+                
+        if not service_account_found:
+            logger.error(f"Service account key not found in any of the possible locations")
             is_initializing = False
             return False
-        
+            
         # Initialize Firebase app
-        cred = credentials.Certificate(service_account_path)
+        cred = credentials.Certificate(actual_path)
         firebase_app = firebase_admin.initialize_app(cred)
         
         # Initialize Firestore and Auth
