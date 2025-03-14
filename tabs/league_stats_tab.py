@@ -38,23 +38,36 @@ class LeagueStatsTab(BaseTab):
         
     def _create_ui(self):
         """Create the league stats tab UI elements"""
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Notebook row
+        
         # Title
         self._create_title("League Statistics")
         
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)
+        self.controls_frame.grid_columnconfigure(1, weight=1)
+        self.controls_frame.grid_columnconfigure(2, weight=0)  # refresh button column
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5))
         
         # Get league options
         league_options = get_league_options()
@@ -66,18 +79,21 @@ class LeagueStatsTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Stat type selection
         self.stat_frame = ctk.CTkFrame(self.controls_frame)
-        self.stat_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.stat_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for stat_frame
+        self.stat_frame.grid_columnconfigure(0, weight=1)
         
         self.stat_label = ctk.CTkLabel(
             self.stat_frame, 
             text="Statistic Type:",
             font=ctk.CTkFont(size=14)
         )
-        self.stat_label.pack(pady=(0, 5))
+        self.stat_label.grid(row=0, column=0, pady=(0, 5))
         
         self.stat_var = tk.StringVar(value="Points")
         
@@ -88,7 +104,7 @@ class LeagueStatsTab(BaseTab):
             variable=self.stat_var,
             font=ctk.CTkFont(size=12)
         )
-        self.stat_segment.pack(fill="x", padx=10, pady=5)
+        self.stat_segment.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Refresh button with animation
         self.refresh_button = self._create_button(
@@ -98,7 +114,7 @@ class LeagueStatsTab(BaseTab):
             width=120,
             height=32
         )
-        self.refresh_button.pack(side="right", padx=20, pady=10)
+        self.refresh_button.grid(row=0, column=2, padx=20, pady=10, sticky="e")
         
         # Configure notebook style for larger font
         style = ttk.Style()
@@ -107,11 +123,15 @@ class LeagueStatsTab(BaseTab):
         
         # Create notebook for stats
         self.notebook = ttk.Notebook(self.content_frame, style="TNotebook")
-        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+        self.notebook.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
         
         # Standings Tab
         self.standings_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.standings_frame, text="Standings")
+        
+        # Configure grid for standings_frame
+        self.standings_frame.grid_columnconfigure(0, weight=1)
+        self.standings_frame.grid_rowconfigure(0, weight=1)
         
         # Create standings table
         self.standings_table = self._create_table(
@@ -130,27 +150,40 @@ class LeagueStatsTab(BaseTab):
                 {"text": "Form", "width": 100}
             ]
         )
+        self.standings_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Charts Tab
         self.charts_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.charts_frame, text="Charts")
         
+        # Configure grid for charts_frame
+        self.charts_frame.grid_columnconfigure(0, weight=1)
+        self.charts_frame.grid_rowconfigure(0, weight=1)
+        
         # Create charts container
         self.charts_container = ctk.CTkFrame(self.charts_frame)
-        self.charts_container.pack(fill="both", expand=True, padx=10, pady=10)
+        self.charts_container.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        
+        # Configure grid for charts_container
+        self.charts_container.grid_columnconfigure(0, weight=1)
+        self.charts_container.grid_rowconfigure(0, weight=1)
         
         # Create matplotlib figure for chart
         self.chart_fig = plt.Figure(figsize=(10, 6), dpi=100)
         self.chart_canvas = FigureCanvasTkAgg(self.chart_fig, master=self.charts_container)
-        self.chart_canvas.get_tk_widget().pack(fill="both", expand=True)
+        self.chart_canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         
         # Stats Tab
         self.stats_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.stats_frame, text="League Stats")
         
+        # Configure grid for stats_frame
+        self.stats_frame.grid_columnconfigure(0, weight=1)
+        self.stats_frame.grid_rowconfigure(0, weight=1)
+        
         # Create stats grid
         self.stats_grid = ctk.CTkFrame(self.stats_frame)
-        self.stats_grid.pack(fill="both", expand=True, padx=10, pady=10)
+        self.stats_grid.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         
         # Configure grid
         self.stats_grid.columnconfigure(0, weight=1)
@@ -175,19 +208,24 @@ class LeagueStatsTab(BaseTab):
         frame = ctk.CTkFrame(parent)
         frame.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
         
+        # Configure grid for frame
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_rowconfigure(1, weight=1)
+        
         title_label = ctk.CTkLabel(
             frame,
             text=title,
             font=ctk.CTkFont(size=16, weight="bold")
         )
-        title_label.pack(pady=(20, 10))
+        title_label.grid(row=0, column=0, pady=(20, 10))
         
         value_label = ctk.CTkLabel(
             frame,
             text=value,
             font=ctk.CTkFont(size=24)
         )
-        value_label.pack(pady=(10, 20))
+        value_label.grid(row=1, column=0, pady=(10, 20))
         
         return {
             "title": title_label,

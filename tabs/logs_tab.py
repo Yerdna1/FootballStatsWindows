@@ -31,7 +31,7 @@ class QueueHandler(logging.Handler):
 # Add the queue handler to the root logger
 root_logger = logging.getLogger()
 queue_handler = QueueHandler(log_queue)
-queue_handler.setLevel(logging.INFO)
+queue_handler.setLevel(logging.DEBUG)  # Set to DEBUG to show all logs
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 queue_handler.setFormatter(formatter)
 root_logger.addHandler(queue_handler)
@@ -43,6 +43,15 @@ class LogsTab(BaseTab):
         # Create UI elements
         self._create_ui()
         
+        # Show footer frame for status bar
+        self.show_footer()
+        
+        # Generate some test logs
+        logger.debug("LogsTab: Debug test message")
+        logger.info("LogsTab: Info test message")
+        logger.warning("LogsTab: Warning test message")
+        logger.error("LogsTab: Error test message")
+        
         # Start log consumer thread
         self.running = True
         self.log_thread = threading.Thread(target=self._consume_logs)
@@ -51,12 +60,27 @@ class LogsTab(BaseTab):
         
     def _create_ui(self):
         """Create the logs tab UI elements"""
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=0)  # Control frame row
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Log frame row
+        
+        # Configure grid for footer_frame
+        self.footer_frame.grid_columnconfigure(0, weight=1)
+        self.footer_frame.grid_rowconfigure(0, weight=1)
+        
         # Title
         self._create_title("Aplikačné logy")
         
         # Create control frame
         self.control_frame = ctk.CTkFrame(self.content_frame)
-        self.control_frame.pack(fill="x", padx=10, pady=10)
+        self.control_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for control_frame
+        self.control_frame.grid_columnconfigure(0, weight=0)  # Level label
+        self.control_frame.grid_columnconfigure(1, weight=0)  # Level option
+        self.control_frame.grid_columnconfigure(2, weight=1)  # Spacer
+        self.control_frame.grid_columnconfigure(3, weight=0)  # Clear button
         
         # Log level filter
         self.level_label = ctk.CTkLabel(
@@ -64,9 +88,9 @@ class LogsTab(BaseTab):
             text=translate("Log Level:"),
             font=ctk.CTkFont(size=18)
         )
-        self.level_label.pack(side="left", padx=(10, 5))
+        self.level_label.grid(row=0, column=0, padx=(10, 5), pady=10, sticky="w")
         
-        self.level_var = tk.StringVar(value="INFO")
+        self.level_var = tk.StringVar(value="DEBUG")
         
         self.level_option = ctk.CTkOptionMenu(
             self.control_frame,
@@ -75,7 +99,7 @@ class LogsTab(BaseTab):
             command=self._set_log_level,
             font=ctk.CTkFont(size=18)
         )
-        self.level_option.pack(side="left", padx=5)
+        self.level_option.grid(row=0, column=1, padx=5, pady=10, sticky="w")
         
         # Clear logs button
         self.clear_button = self._create_button(
@@ -86,11 +110,11 @@ class LogsTab(BaseTab):
             height=32,
             tooltip_text="Clear all log messages from the display"
         )
-        self.clear_button.pack(side="right", padx=10)
+        self.clear_button.grid(row=0, column=3, padx=10, pady=10, sticky="e")
         
         # Create log text area
         self.log_frame = ctk.CTkFrame(self.content_frame)
-        self.log_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.log_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
         
         # Configure style for larger font
         style = ttk.Style()
@@ -122,12 +146,12 @@ class LogsTab(BaseTab):
         hsb = ttk.Scrollbar(self.log_frame, orient="horizontal", command=self.log_tree.xview)
         self.log_tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
         
-        # Grid layout
+        # Grid layout for log_tree and scrollbars
         self.log_tree.grid(column=0, row=0, sticky="nsew")
         vsb.grid(column=1, row=0, sticky="ns")
         hsb.grid(column=0, row=1, sticky="ew")
         
-        # Configure grid weights
+        # Configure grid weights for log_frame
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
         
@@ -144,7 +168,7 @@ class LogsTab(BaseTab):
             text=translate("Logging started"),
             font=ctk.CTkFont(size=14)
         )
-        self.status_label.pack(side="left", padx=10)
+        self.status_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
         # Log a test message
         logger.info("Logs tab initialized")

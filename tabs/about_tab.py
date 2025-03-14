@@ -60,7 +60,7 @@ class AboutTab(BaseTab):
         self._create_feature_section(
             "Moderné používateľské rozhranie",
             [
-                "Čisté, responzívne rozhranie s 11 funkčnými záložkami",
+                "Čisté, responzívne rozhranie s 11 funkčnými záložkami (V PLNEJ VERZII)",
                 "Podpora tém s viacerými farebnými schémami (modrá, zelená, fialová, červená, tmavá)",
                 "Veľmi veľké písmo (18pt) vo všetkých tabuľkách pre lepšiu čitateľnosť",
                 "Extra veľké písmo (28pt) v záložkách pre lepšiu čitateľnosť",
@@ -190,7 +190,7 @@ class AboutTab(BaseTab):
         self._create_feature_section(
             "Získanie API kľúča",
             [
-                "Prejdite na https://www.api-football.com/ a zaregistrujte sa",
+                "Prejdite na KONTAKT a zaregistrujte sa",
                 "Prihláste sa na ich bezplatný alebo platený plán",
                 "Získajte svoj API kľúč z vášho ovládacieho panela"
             ]
@@ -211,7 +211,7 @@ class AboutTab(BaseTab):
         
         self.contact_info = ctk.CTkLabel(
             self.scroll_frame,
-            text="Andrej Galad\nEmail: marekzm@azet.sk",
+            text="Andrej \nEmail: marekzm@azet.sk",
             font=ctk.CTkFont(size=16),
             justify="left"
         )
@@ -228,8 +228,8 @@ class AboutTab(BaseTab):
         # API link
         self.api_link = ctk.CTkButton(
             self.scroll_frame,
-            text="Navštíviť API-Football",
-            command=lambda: webbrowser.open("https://www.api-football.com/"),
+            text="Otazky piste emailom",
+            command=lambda: webbrowser.open("www.gmail.com"),
             width=200,
             height=32,
             corner_radius=8,
@@ -241,7 +241,7 @@ class AboutTab(BaseTab):
         self.api_link.pack(pady=(20, 0))
         
         # Add tooltip to API link button
-        self._add_tooltip(self.api_link, "Kliknite pre návštevu stránky API-Football, kde môžete získať API kľúč")
+        self._add_tooltip(self.api_link, "Kliknite pre návštevu stránky , kde môžete získať API kľúč")
         
     def _create_section_title(self, title):
         """Create a section title"""

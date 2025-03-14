@@ -25,19 +25,35 @@ class BaseTab:
         
         # Create main frame
         self.main_frame = ctk.CTkFrame(self.parent)
-        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        
+        # Configure grid for parent
+        self.parent.grid_columnconfigure(0, weight=1)
+        self.parent.grid_rowconfigure(0, weight=1)
+        
+        # Configure grid for main_frame
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(1, weight=1)  # Content row gets the weight
         
         # Create header frame
         self.header_frame = ctk.CTkFrame(self.main_frame)
-        self.header_frame.pack(fill="x", padx=10, pady=10)
+        self.header_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for header_frame
+        self.header_frame.grid_columnconfigure(0, weight=1)  # Title
+        self.header_frame.grid_columnconfigure(1, weight=0)  # Refresh button
         
         # Create content frame
         self.content_frame = ctk.CTkFrame(self.main_frame)
-        self.content_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.content_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         
-        # Create footer frame
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(0, weight=1)
+        
+        # Create footer frame (hidden by default)
         self.footer_frame = ctk.CTkFrame(self.main_frame)
-        self.footer_frame.pack(fill="x", padx=10, pady=10)
+        self.use_footer = False  # Flag to indicate if footer should be used
         
         # Create loading indicator (hidden by default)
         self.loading_indicator_frame = ctk.CTkFrame(
@@ -46,20 +62,92 @@ class BaseTab:
             width=300,
             height=80
         )
+        
+        # Configure grid for loading indicator frame
+        self.loading_indicator_frame.grid_columnconfigure(0, weight=1)
+        self.loading_indicator_frame.grid_rowconfigure(0, weight=1)
+        
         self.loading_indicator_label = ctk.CTkLabel(
             self.loading_indicator_frame,
             text=translate("Loading..."),
             font=ctk.CTkFont(size=24, weight="bold"),
             text_color="white"
         )
-        self.loading_indicator_label.pack(pady=10, padx=20)
-        # Don't pack the frame initially - it will be shown when needed
+        self.loading_indicator_label.grid(row=0, column=0, pady=10, padx=20)
+        # Don't add the frame to the layout initially - it will be shown when needed
+        
+    def show_footer(self):
+        """Show the footer frame and add it to the layout"""
+        if not self.use_footer:
+            self.footer_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+            self.use_footer = True
+            
+    def hide_footer(self):
+        """Hide the footer frame and remove it from the layout"""
+        if self.use_footer:
+            self.footer_frame.grid_forget()
+            self.use_footer = False
+        
+    def create_table(self, parent, columns, height=200):
+        """
+        Create a table widget.
+        
+        Args:
+            parent: Parent widget
+            columns: List of column names
+            height: Table height
+            
+        Returns:
+            ttk.Treeview: Table widget
+        """
+        # This is the recommended method to use
+        # No warning needed since this is the preferred method
+        
+        # Create a frame for the table and scrollbar
+        frame = ctk.CTkFrame(parent)
+        
+        # Use grid instead of pack
+        # frame.pack(fill="both", expand=True, padx=10, pady=10)
+        frame.grid(sticky="nsew", padx=10, pady=10)
+        
+        # Configure the frame's grid
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
+        
+        # Create the table
+        table = ttk.Treeview(frame, columns=columns, show="headings", height=height)
+        
+        # Set column headings
+        for col in columns:
+            table.heading(col, text=col)
+            table.column(col, width=100)
+        
+        # Add scrollbar
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=table.yview)
+        table.configure(yscrollcommand=scrollbar.set)
+        
+        # Position table and scrollbar with grid instead of pack
+        table.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        return table
         
     def _create_table(self, parent, columns, height=400):
-        """Create a table with the given columns and increased font size"""
+        """Create a table with the given columns and increased font size
+        
+        Note: This is the older implementation, kept for backward compatibility.
+        Consider using create_table() instead.
+        """
+        logger.warning("Using deprecated _create_table method, consider using create_table instead")
+        
         # Create frame for table
         frame = ctk.CTkFrame(parent)
-        frame.pack(fill="both", expand=True, padx=10, pady=10)
+        frame.grid(sticky="nsew", padx=10, pady=10)
+        
+           # Configure the frame's grid
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
+
         
         # Configure style for larger font
         style = ttk.Style()
@@ -73,8 +161,16 @@ class BaseTab:
         
         # Configure columns
         for i, col in enumerate(columns):
-            table.heading(f"col{i}", text=col["text"])
-            table.column(f"col{i}", width=col["width"], anchor="center")
+            # Handle both string and dict columns
+            if isinstance(col, dict):
+                col_text = col.get("text", f"Column {i}")
+                col_width = col.get("width", 100)
+            else:
+                col_text = col
+                col_width = 100
+                
+            table.heading(f"col{i}", text=col_text)
+            table.column(f"col{i}", width=col_width, anchor="center")
         
         # Add scrollbars
         vsb = ttk.Scrollbar(frame, orient="vertical", command=table.yview)
@@ -93,17 +189,67 @@ class BaseTab:
         return table
         
     def _create_title(self, text, font_size=24):
-        """Create a title label"""
+        """Create a title label with refresh button"""
+        # Configure grid for header_frame if not already done
+        if not hasattr(self.header_frame, '_grid_configured'):
+            self.header_frame.grid_columnconfigure(0, weight=1)
+            self.header_frame.grid_rowconfigure(0, weight=1)
+            self.header_frame._grid_configured = True
+            
         title_label = ctk.CTkLabel(
             self.header_frame, 
             text=translate(text), 
             font=ctk.CTkFont(size=font_size, weight="bold")
         )
-        title_label.pack(pady=10)
+        title_label.grid(row=0, column=0, pady=10, sticky="w", padx=10)
+        
+        # Add refresh button
+        self.refresh_button = self._create_button(
+            self.header_frame,
+            text="Refresh Data",
+            command=self._refresh_data,
+            width=120,
+            height=32,
+            tooltip_text="Refresh data from API"
+        )
+        self.refresh_button.grid(row=0, column=1, padx=10, pady=10, sticky="e")
+        
         return title_label
         
-    def _create_button(self, parent, text, command, width=150, height=32, tooltip_text=None):
+    def _refresh_data(self):
+        """Refresh data by temporarily enabling API fetching"""
+        # Show loading animation
+        self._show_loading_animation(self.refresh_button, "Refresh Data")
+        
+        # Temporarily disable auto-fetch flag
+        original_auto_fetch = self.api.disable_auto_fetch
+        self.api.disable_auto_fetch = False
+        
+        # Call the tab-specific refresh method
+        self.parent.after(100, lambda: self._refresh_data_thread(original_auto_fetch))
+    
+    def _refresh_data_thread(self, original_auto_fetch):
+        """Tab-specific refresh method to be overridden by subclasses"""
+        # This method should be overridden by subclasses
+        # Default implementation just restores the auto-fetch flag and resets the button
+        
+        # Restore auto-fetch flag
+        self.api.disable_auto_fetch = original_auto_fetch
+        
+        # Reset refresh button
+        self.refresh_button.configure(text="Refresh Data", state="normal")
+        
+    def _create_button(self, parent, text, command, width=150, height=32, tooltip_text=None, fg_color=None, hover_color=None):
         """Create a styled button with optional tooltip"""
+        
+        # Use theme primary as default if fg_color not provided
+        if fg_color is None:
+            fg_color = self.theme["primary"]
+            
+        # Use provided hover_color, or theme primary if not provided
+        if hover_color is None:
+            hover_color = self.theme["primary"]
+        
         button = ctk.CTkButton(
             parent,
             text=translate(text),
@@ -112,10 +258,9 @@ class BaseTab:
             height=height,
             corner_radius=8,
             border_width=0,
-            fg_color=self.theme["accent"],
-            hover_color=self.theme["primary"],
+            fg_color=fg_color,
+            hover_color=hover_color,
             text_color="white",
-            font=ctk.CTkFont(size=24)
         )
         
         # Add tooltip if provided
@@ -160,14 +305,14 @@ class BaseTab:
         
     def show_loading_indicator(self):
         """Show the loading indicator overlay"""
-        # Pack the loading indicator in the center of the content frame
-        self.loading_indicator_frame.pack(in_=self.content_frame, expand=True, padx=20, pady=20)
+        # Use grid instead of pack to avoid geometry manager conflicts
+        self.loading_indicator_frame.grid(in_=self.content_frame, row=0, column=0, sticky="nsew", padx=20, pady=20)
         self.loading_indicator_frame.lift()  # Bring to front
         self._animate_loading_indicator(0)
         
     def hide_loading_indicator(self):
         """Hide the loading indicator overlay"""
-        self.loading_indicator_frame.pack_forget()
+        self.loading_indicator_frame.grid_forget()
         
     def _animate_loading_indicator(self, count):
         """Animate the loading indicator text"""
@@ -227,6 +372,10 @@ class ToolTip:
         self.tooltip_window.wm_overrideredirect(True)
         self.tooltip_window.wm_geometry(f"+{x}+{y}")
         
+        # Configure grid for tooltip window
+        self.tooltip_window.grid_columnconfigure(0, weight=1)
+        self.tooltip_window.grid_rowconfigure(0, weight=1)
+        
         # Create tooltip label
         label = tk.Label(
             self.tooltip_window,
@@ -237,7 +386,7 @@ class ToolTip:
             borderwidth=1,
             font=("Helvetica", 12)
         )
-        label.pack(padx=2, pady=2)
+        label.grid(row=0, column=0, padx=2, pady=2)
         
     def on_leave(self, event=None):
         """Hide tooltip when mouse leaves widget"""

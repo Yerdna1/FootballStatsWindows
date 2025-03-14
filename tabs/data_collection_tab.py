@@ -29,23 +29,36 @@ class DataCollectionTab(BaseTab):
         
     def _create_ui(self):
         """Create the data collection tab UI elements"""
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Row for data display
+        
         # Title
         self._create_title("Data Collection")
         
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)
+        self.controls_frame.grid_columnconfigure(1, weight=1)
+        self.controls_frame.grid_columnconfigure(2, weight=1)
+        self.controls_frame.grid_columnconfigure(3, weight=1)
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5))
         
         # Get league options
         league_options = get_league_options()
@@ -57,18 +70,21 @@ class DataCollectionTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Data type selection
         self.data_type_frame = ctk.CTkFrame(self.controls_frame)
-        self.data_type_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.data_type_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for data_type_frame
+        self.data_type_frame.grid_columnconfigure(0, weight=1)
         
         self.data_type_label = ctk.CTkLabel(
             self.data_type_frame, 
             text="Data Type:",
             font=ctk.CTkFont(size=14)
         )
-        self.data_type_label.pack(pady=(0, 5))
+        self.data_type_label.grid(row=0, column=0, pady=(0, 5))
         
         # Create dropdown for data types
         self.data_type_dropdown = ctk.CTkOptionMenu(
@@ -78,18 +94,21 @@ class DataCollectionTab(BaseTab):
             variable=self.selected_data_type,
             font=ctk.CTkFont(size=12)
         )
-        self.data_type_dropdown.pack(fill="x", padx=10, pady=5)
+        self.data_type_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Season selection
         self.season_frame = ctk.CTkFrame(self.controls_frame)
-        self.season_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.season_frame.grid(row=0, column=2, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for season_frame
+        self.season_frame.grid_columnconfigure(0, weight=1)
         
         self.season_label = ctk.CTkLabel(
             self.season_frame, 
             text="Season:",
             font=ctk.CTkFont(size=14)
         )
-        self.season_label.pack(pady=(0, 5))
+        self.season_label.grid(row=0, column=0, pady=(0, 5))
         
         # Create dropdown for seasons
         current_year = datetime.now().year
@@ -100,7 +119,7 @@ class DataCollectionTab(BaseTab):
             values=seasons,
             font=ctk.CTkFont(size=12)
         )
-        self.season_dropdown.pack(fill="x", padx=10, pady=5)
+        self.season_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Fetch button
         self.fetch_button = self._create_button(
@@ -110,11 +129,15 @@ class DataCollectionTab(BaseTab):
             width=120,
             height=32
         )
-        self.fetch_button.pack(side="right", padx=20, pady=10)
+        self.fetch_button.grid(row=0, column=3, padx=20, pady=10, sticky="e")
         
         # Create data display section
         self.data_frame = ctk.CTkFrame(self.content_frame)
-        self.data_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.data_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        
+        # Configure grid for data_frame
+        self.data_frame.grid_columnconfigure(0, weight=1)
+        self.data_frame.grid_rowconfigure(0, weight=1)
         
         # Create data table
         self.data_table = self._create_table(
@@ -128,10 +151,14 @@ class DataCollectionTab(BaseTab):
                 {"text": "Details", "width": 300}
             ]
         )
+        self.data_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Create export section
         self.export_frame = ctk.CTkFrame(self.content_frame)
-        self.export_frame.pack(fill="x", padx=10, pady=10)
+        self.export_frame.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for export_frame
+        self.export_frame.grid_columnconfigure(4, weight=1)  # Give weight to the middle area
         
         # Export format selection
         self.export_format_var = tk.StringVar(value="CSV")
@@ -143,7 +170,7 @@ class DataCollectionTab(BaseTab):
             value="CSV",
             font=ctk.CTkFont(size=12)
         )
-        self.csv_radio.pack(side="left", padx=20, pady=10)
+        self.csv_radio.grid(row=0, column=0, padx=20, pady=10, sticky="w")
         
         self.json_radio = ctk.CTkRadioButton(
             self.export_frame,
@@ -152,7 +179,7 @@ class DataCollectionTab(BaseTab):
             value="JSON",
             font=ctk.CTkFont(size=12)
         )
-        self.json_radio.pack(side="left", padx=20, pady=10)
+        self.json_radio.grid(row=0, column=1, padx=20, pady=10, sticky="w")
         
         # Export button
         self.export_button = self._create_button(
@@ -162,7 +189,7 @@ class DataCollectionTab(BaseTab):
             width=120,
             height=32
         )
-        self.export_button.pack(side="right", padx=20, pady=10)
+        self.export_button.grid(row=0, column=5, padx=20, pady=10, sticky="e")
         
         # Save to database button
         self.save_button = self._create_button(
@@ -172,7 +199,7 @@ class DataCollectionTab(BaseTab):
             width=150,
             height=32
         )
-        self.save_button.pack(side="right", padx=20, pady=10)
+        self.save_button.grid(row=0, column=6, padx=20, pady=10, sticky="e")
         
     def _on_league_changed(self, selection):
         """Handle league selection change"""

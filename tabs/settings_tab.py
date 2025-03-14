@@ -48,8 +48,13 @@ class SettingsTab:
         
         # Appearance Tab
         self.appearance_frame = ctk.CTkFrame(self.notebook)
-        self.notebook.add(self.appearance_frame, text="Appearance")
+        self.notebook.add(self.appearance_frame, text=translate("Appearance"))
         self._create_appearance_settings()
+        
+        # Language Tab
+        self.language_frame = ctk.CTkFrame(self.notebook)
+        self.notebook.add(self.language_frame, text=translate("Language"))
+        self._create_language_settings()
         
         # Data Tab
         self.data_frame = ctk.CTkFrame(self.notebook)
@@ -106,6 +111,145 @@ class SettingsTab:
         )
         self.status_label.pack(side="left", padx=10, pady=10)
         
+    def _create_language_settings(self):
+        """Create language settings UI"""
+        # Main container
+        self.language_container = ctk.CTkFrame(self.language_frame)
+        self.language_container.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Language selection label
+        self.language_label = ctk.CTkLabel(
+            self.language_container,
+            text=translate("Application Language:"),
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        self.language_label.pack(anchor="w", padx=10, pady=(10, 20))
+        
+        # Get current language
+        current_language = self.settings_manager.get_language()
+        self.language_var = tk.StringVar(value=current_language)
+        
+        # Get available languages
+        available_languages = self.settings_manager.get_available_languages()
+        
+        # Create radio buttons for each language
+        self.language_buttons_frame = ctk.CTkFrame(self.language_container, fg_color="transparent")
+        self.language_buttons_frame.pack(fill="x", padx=20, pady=10)
+        
+        for lang_code, lang_name in available_languages.items():
+            language_radio = ctk.CTkRadioButton(
+                self.language_buttons_frame,
+                text=lang_name,
+                variable=self.language_var,
+                value=lang_code,
+                font=ctk.CTkFont(size=16)
+            )
+            language_radio.pack(anchor="w", padx=20, pady=10)
+        
+        # Add apply button for immediate language change
+        self.apply_language_button = ctk.CTkButton(
+            self.language_container,
+            text=translate("Apply Language"),
+            command=self._apply_language,
+            width=200,
+            height=40,
+            corner_radius=8,
+            border_width=0,
+            fg_color=self.theme["accent"],
+            hover_color=self.theme["primary"],
+            text_color="white",
+            font=ctk.CTkFont(size=16)
+        )
+        self.apply_language_button.pack(anchor="w", padx=30, pady=20)
+        
+        # Add note about language change
+        self.language_note = ctk.CTkLabel(
+            self.language_container,
+            text=translate("Note: Changing the language will update all text in the application."),
+            font=ctk.CTkFont(size=14, slant="italic")
+        )
+        self.language_note.pack(anchor="w", padx=10, pady=(20, 10))
+    
+    def _apply_language(self):
+        """Apply language setting without saving other settings"""
+        try:
+            # Get the current language from the radio buttons
+            language = self.language_var.get()
+            
+            # Save only the language setting
+            self.settings_manager.set_setting("language", language)
+            
+            # Show success message with restart note
+            language_name = self.settings_manager.get_available_languages()[language]
+            self.status_label.configure(text=f"Language saved to {language_name}. Restart application to apply.")
+            
+            # Create a popup message
+            self._show_restart_required_popup(language_name)
+            
+        except Exception as e:
+            logger.error(f"Error applying language: {str(e)}")
+            self.status_label.configure(text=f"Error: {str(e)}")
+            self.parent.after(2000, lambda: self.status_label.configure(text=""))
+    
+    def _show_restart_required_popup(self, language_name):
+        """Show a popup message about language change requiring restart"""
+        try:
+            # Create a popup window
+            popup = ctk.CTkToplevel(self.parent)
+            popup.title(translate("Restart Required"))
+            popup.geometry("500x250")
+            popup.transient(self.parent)  # Set to be on top of the parent window
+            popup.grab_set()  # Make the popup modal
+            
+            # Add warning icon
+            warning_frame = ctk.CTkFrame(popup, fg_color="transparent")
+            warning_frame.pack(pady=(20, 10))
+            
+            warning_label = ctk.CTkLabel(
+                warning_frame,
+                text="⚠️",  # Warning emoji
+                font=ctk.CTkFont(size=48),
+                text_color="#FFA500"  # Orange color
+            )
+            warning_label.pack()
+            
+            # Add message
+            message = ctk.CTkLabel(
+                popup,
+                text=f"Language has been changed to {language_name}.\n\nYou must restart the application\nfor the language change to take effect.",
+                font=ctk.CTkFont(size=16, weight="bold"),
+                justify="center"
+            )
+            message.pack(pady=(10, 20))
+            
+            # Add note
+            note = ctk.CTkLabel(
+                popup,
+                text="Your settings have been saved.",
+                font=ctk.CTkFont(size=14, slant="italic"),
+                justify="center"
+            )
+            note.pack(pady=(0, 20))
+            
+            # Add OK button
+            ok_button = ctk.CTkButton(
+                popup,
+                text="OK",
+                command=popup.destroy,
+                width=120,
+                height=40,
+                corner_radius=8,
+                border_width=0,
+                fg_color=self.theme["accent"],
+                hover_color=self.theme["primary"],
+                text_color="white",
+                font=ctk.CTkFont(size=16)
+            )
+            ok_button.pack(pady=10)
+            
+        except Exception as e:
+            logger.error(f"Error showing restart required popup: {str(e)}")
+    
     def _create_appearance_settings(self):
         """Create appearance settings UI"""
         # Main container with grid layout for better space usage
@@ -649,6 +793,9 @@ class SettingsTab:
             self.settings_manager.set_setting("color_theme", self.color_theme_var.get())
             self.settings_manager.set_setting("font_size", int(self.font_size_var.get()))
             
+            # Language settings
+            self.settings_manager.set_setting("language", self.language_var.get())
+            
             # Data settings
             self.settings_manager.set_setting("form_length", int(self.form_length_var.get()))
             self.settings_manager.set_setting("threshold", float(self.threshold_var.get()))
@@ -694,6 +841,7 @@ class SettingsTab:
             self.appearance_mode_var.set(self.settings_manager.get_appearance_mode())
             self.color_theme_var.set(self.settings_manager.get_setting("color_theme"))
             self.font_size_var.set(self.settings_manager.get_font_size())
+            self.language_var.set(self.settings_manager.get_language())
             self.form_length_var.set(self.settings_manager.get_form_length())
             self.threshold_var.set(self.settings_manager.get_threshold())
             self.auto_refresh_var.set(self.settings_manager.get_auto_refresh())

@@ -36,23 +36,36 @@ class NextRoundTab(BaseTab):
         
     def _create_ui(self):
         """Create the next round tab UI elements"""
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Fixtures frame row
+        self.content_frame.grid_rowconfigure(3, weight=0)  # Details frame row
+        
         # Title
         self._create_title("Next Round Fixtures")
         
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)
+        self.controls_frame.grid_columnconfigure(1, weight=0)  # refresh button column
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5))
         
         # Get league options
         league_options = get_league_options()
@@ -64,7 +77,7 @@ class NextRoundTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Refresh button with animation
         self.refresh_button = self._create_button(
@@ -74,11 +87,15 @@ class NextRoundTab(BaseTab):
             width=120,
             height=32
         )
-        self.refresh_button.pack(side="right", padx=20, pady=10)
+        self.refresh_button.grid(row=0, column=1, padx=20, pady=10, sticky="e")
         
         # Create fixtures section
         self.fixtures_frame = ctk.CTkFrame(self.content_frame)
-        self.fixtures_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.fixtures_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        
+        # Configure grid for fixtures_frame
+        self.fixtures_frame.grid_columnconfigure(0, weight=1)
+        self.fixtures_frame.grid_rowconfigure(1, weight=1)  # Table row
         
         # Round info
         self.round_label = ctk.CTkLabel(
@@ -86,7 +103,7 @@ class NextRoundTab(BaseTab):
             text="Round: ",
             font=ctk.CTkFont(size=16, weight="bold")
         )
-        self.round_label.pack(anchor="w", padx=10, pady=5)
+        self.round_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
         # Create fixtures table
         self.fixtures_table = self._create_table(
@@ -102,10 +119,15 @@ class NextRoundTab(BaseTab):
                 {"text": "Prediction", "width": 150}
             ]
         )
+        self.fixtures_table.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         
         # Create details section
         self.details_frame = ctk.CTkFrame(self.content_frame)
-        self.details_frame.pack(fill="x", padx=10, pady=10)
+        self.details_frame.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for details_frame
+        self.details_frame.grid_columnconfigure(0, weight=1)
+        self.details_frame.grid_rowconfigure(1, weight=1)  # Content row
         
         # Match details label
         self.details_label = ctk.CTkLabel(
@@ -113,7 +135,7 @@ class NextRoundTab(BaseTab):
             text="Select a match to view details",
             font=ctk.CTkFont(size=14)
         )
-        self.details_label.pack(pady=10)
+        self.details_label.grid(row=0, column=0, pady=10)
         
         # Match details content
         self.details_content = ctk.CTkTextbox(
@@ -121,7 +143,7 @@ class NextRoundTab(BaseTab):
             height=250,  # Increased height to accommodate larger font
             font=ctk.CTkFont(size=self.settings_manager.get_font_size())  # Use font size from settings
         )
-        self.details_content.pack(fill="x", padx=10, pady=10)
+        self.details_content.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
         
         # Bind selection event
         self.fixtures_table.bind("<<TreeviewSelect>>", self._on_fixture_selected)
@@ -144,16 +166,25 @@ class NextRoundTab(BaseTab):
         # Refresh data
         self._refresh_data()
         
-    def _refresh_data(self):
-        """Refresh data from API"""
-        # Show loading animation
-        self._show_loading_animation(self.refresh_button, "Refresh Data")
-        
-        # Show loading indicator overlay
-        self.show_loading_indicator()
-        
-        # Get data in a separate thread
-        self.parent.after(100, self._fetch_data)
+    def _refresh_data_thread(self, original_auto_fetch):
+        """Override the base class method to fetch data from API"""
+        try:
+            # Show loading indicator overlay
+            self.show_loading_indicator()
+            
+            # Fetch data
+            self._fetch_data()
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+        except Exception as e:
+            logger.error(f"Error in refresh data thread: {str(e)}")
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+            
+            # Hide loading indicator
+            self.hide_loading_indicator()
             
     def _fetch_data(self):
         """Fetch data from API"""
@@ -243,9 +274,16 @@ class NextRoundTab(BaseTab):
                 prediction = "Unknown"
                 
                 try:
+                    # Temporarily disable auto-fetch flag
+                    original_auto_fetch = self.api.disable_auto_fetch
+                    self.api.disable_auto_fetch = False
+                    
                     # Fetch team statistics with error handling
                     home_stats = self.api.fetch_team_statistics(league_id, home_team_id)
                     away_stats = self.api.fetch_team_statistics(league_id, away_team_id)
+                    
+                    # Restore auto-fetch flag
+                    self.api.disable_auto_fetch = original_auto_fetch
                     
                     # Extract form data
                     home_form = home_stats.get('form', 'N/A')
@@ -318,8 +356,15 @@ class NextRoundTab(BaseTab):
         
         # Fetch team statistics
         try:
+            # Temporarily disable auto-fetch flag
+            original_auto_fetch = self.api.disable_auto_fetch
+            self.api.disable_auto_fetch = False
+            
             home_stats = self.api.fetch_team_statistics(league_id, home_team_id)
             away_stats = self.api.fetch_team_statistics(league_id, away_team_id)
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
             
             # Extract form data
             home_form = home_stats.get('form', 'N/A')

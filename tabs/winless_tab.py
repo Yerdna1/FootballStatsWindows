@@ -39,20 +39,33 @@ class WinlessTab(BaseTab):
         # Title
         self._create_title("Winless Streaks Analysis")
         
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Table row
+        
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)  # League frame
+        self.controls_frame.grid_columnconfigure(1, weight=1)  # Streak frame
+        self.controls_frame.grid_columnconfigure(2, weight=0)  # Refresh button
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5), sticky="w")
         
         # Get league options
         league_options = get_league_options()
@@ -64,18 +77,21 @@ class WinlessTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Streak type selection
         self.streak_frame = ctk.CTkFrame(self.controls_frame)
-        self.streak_frame.pack(side="right", padx=10, pady=10, fill="x", expand=True)
+        self.streak_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for streak_frame
+        self.streak_frame.grid_columnconfigure(0, weight=1)
         
         self.streak_label = ctk.CTkLabel(
             self.streak_frame, 
             text="Streak Type:",
             font=ctk.CTkFont(size=14)
         )
-        self.streak_label.pack(pady=(0, 5))
+        self.streak_label.grid(row=0, column=0, pady=(0, 5), sticky="w")
         
         self.streak_var = tk.StringVar(value="Winless")
         
@@ -86,7 +102,7 @@ class WinlessTab(BaseTab):
             variable=self.streak_var,
             font=ctk.CTkFont(size=12)
         )
-        self.streak_segment.pack(fill="x", padx=10, pady=5)
+        self.streak_segment.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Refresh button with animation
         self.refresh_button = self._create_button(
@@ -96,26 +112,31 @@ class WinlessTab(BaseTab):
             width=120,
             height=32
         )
-        self.refresh_button.pack(side="right", padx=20, pady=10)
+        self.refresh_button.grid(row=0, column=2, padx=20, pady=10, sticky="e")
         
-        # Create tables
+        # Create tables frame
         self.tables_frame = ctk.CTkFrame(self.content_frame)
-        self.tables_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.tables_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
         
-        # Create winless streaks table
+        # Configure grid for tables_frame
+        self.tables_frame.grid_columnconfigure(0, weight=1)
+        self.tables_frame.grid_rowconfigure(0, weight=1)
+        
+        # Create winless streaks table with a single column layout
         self.winless_table = self._create_table(
             self.tables_frame,
             columns=[
-                {"text": "Team", "width": 150},
-                {"text": "League", "width": 150},
+                {"text": "Team", "width": 200},
                 {"text": "Streak", "width": 80},
-                {"text": "Last Win", "width": 100},
-                {"text": "Days Since Win", "width": 100},
-                {"text": "Next Opponent", "width": 150},
-                {"text": "Match Date", "width": 100},
-                {"text": "Venue", "width": 100}
+                {"text": "Last Win", "width": 120},
+                {"text": "Days Since Win", "width": 120},
+                {"text": "Next Opponent", "width": 200},
+                {"text": "Match Date", "width": 120}
             ]
         )
+        
+        # Position the table to fill the entire frame
+        self.winless_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Initial data load
         self._refresh_data()
@@ -140,17 +161,12 @@ class WinlessTab(BaseTab):
         # Refresh data
         self._refresh_data()
         
-    def _refresh_data(self):
-        """Refresh data from API"""
-        # Show loading animation
-        self._show_loading_animation(self.refresh_button, "Refresh Data")
-        
-        # Get data in a separate thread
-        self.parent.after(100, self._fetch_data)
-            
-    def _fetch_data(self):
-        """Fetch data from API"""
+    def _refresh_data_thread(self, original_auto_fetch):
+        """Override the base class method to fetch data from API"""
         try:
+            # Show loading indicator overlay
+            self.show_loading_indicator()
+            
             # Get league ID
             league_id = self.selected_league.get()
             
@@ -195,13 +211,25 @@ class WinlessTab(BaseTab):
             # Update table
             self._update_table()
             
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+            
             # Reset refresh button
             self.refresh_button.configure(text="Refresh Data", state="normal")
+            
+            # Hide loading indicator
+            self.hide_loading_indicator()
             
         except Exception as e:
             logger.error(f"Error fetching data: {str(e)}")
             self.refresh_button.configure(text="Refresh Failed", state="normal")
             self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data"))
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+            
+            # Hide loading indicator
+            self.hide_loading_indicator()
             
     def _update_table(self):
         """Update the winless streaks table"""
@@ -211,18 +239,16 @@ class WinlessTab(BaseTab):
             
         # Add data
         for i, team in enumerate(self.winless_data):
-            # Add row
+            # Add row with the new column structure (6 columns instead of 8)
             self.winless_table.insert(
                 "", "end",
                 values=(
                     team.get('team', ''),
-                    team.get('league', ''),
                     team.get('streak', ''),
                     team.get('last_win', ''),
                     team.get('days_since_win', ''),
                     team.get('next_opponent', ''),
-                    team.get('match_date', ''),
-                    team.get('venue', '')
+                    team.get('match_date', '')
                 ),
                 tags=('streak',)
             )

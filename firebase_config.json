@@ -1,0 +1,11 @@
+{
+    "apiKey": "AIzaSyCy-v3w216jacLfeMr5aN-juz-ppPjH69c",
+    "authDomain": "futbalwindowsapp.firebaseapp.com",
+    "databaseURL": "https://futbalwindowsapp-default-rtdb.europe-west1.firebasedatabase.app",
+    "projectId": "futbalwindowsapp",
+    "storageBucket": "futbalwindowsapp.appspot.com",
+    "messagingSenderId": "514021937175",
+    "appId": "1:514021937175:web:279e864851baac41b6cc52",
+    "serviceAccountKeyPath": "firebase-service-account.json"
+
+}

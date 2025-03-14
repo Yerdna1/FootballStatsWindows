@@ -43,20 +43,34 @@ class FirebaseTab(BaseTab):
         # Title
         self._create_title("Form Changes Analysis")
         
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Notebook row
+        self.content_frame.grid_rowconfigure(3, weight=0)  # Actions row
+        
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)  # League frame
+        self.controls_frame.grid_columnconfigure(1, weight=1)  # Threshold frame
+        self.controls_frame.grid_columnconfigure(2, weight=0)  # Refresh button
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5), sticky="w")
         
         # Get league options
         league_options = get_league_options()
@@ -68,18 +82,21 @@ class FirebaseTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Threshold selection
         self.threshold_frame = ctk.CTkFrame(self.controls_frame)
-        self.threshold_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.threshold_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for threshold_frame
+        self.threshold_frame.grid_columnconfigure(0, weight=1)
         
         self.threshold_label = ctk.CTkLabel(
             self.threshold_frame, 
             text=f"Threshold: {self.threshold.get()}",
             font=ctk.CTkFont(size=14)
         )
-        self.threshold_label.pack(pady=(0, 5))
+        self.threshold_label.grid(row=0, column=0, pady=(0, 5), sticky="w")
         
         # Create slider for threshold
         self.threshold_slider = ctk.CTkSlider(
@@ -90,25 +107,29 @@ class FirebaseTab(BaseTab):
             command=self._on_threshold_changed,
             variable=self.threshold
         )
-        self.threshold_slider.pack(fill="x", padx=10, pady=5)
+        self.threshold_slider.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Refresh button with animation
-        self.refresh_button = self._create_button(
+        self.controls_refresh_button = self._create_button(
             self.controls_frame,
             text="Refresh Data",
             command=self._refresh_data,
             width=120,
             height=32
         )
-        self.refresh_button.pack(side="right", padx=20, pady=10)
+        self.controls_refresh_button.grid(row=0, column=2, padx=20, pady=10, sticky="e")
         
         # Create notebook for tables
         self.notebook = ttk.Notebook(self.content_frame)
-        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+        self.notebook.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
         
         # Form Changes Tab
         self.form_changes_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.form_changes_frame, text="Form Changes")
+        
+        # Configure grid for form_changes_frame
+        self.form_changes_frame.grid_columnconfigure(0, weight=1)
+        self.form_changes_frame.grid_rowconfigure(0, weight=1)
         
         # Create form changes table
         self.form_changes_table = self._create_table(
@@ -124,10 +145,15 @@ class FirebaseTab(BaseTab):
                 {"text": "Venue", "width": 100}
             ]
         )
+        self.form_changes_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Upcoming Fixtures Tab
         self.fixtures_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.fixtures_frame, text="Upcoming Fixtures")
+        
+        # Configure grid for fixtures_frame
+        self.fixtures_frame.grid_columnconfigure(0, weight=1)
+        self.fixtures_frame.grid_rowconfigure(0, weight=1)
         
         # Create upcoming fixtures table
         self.fixtures_table = self._create_table(
@@ -143,10 +169,15 @@ class FirebaseTab(BaseTab):
                 {"text": "Status", "width": 100}
             ]
         )
+        self.fixtures_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Results Tab
         self.results_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.results_frame, text="Results")
+        
+        # Configure grid for results_frame
+        self.results_frame.grid_columnconfigure(0, weight=1)
+        self.results_frame.grid_rowconfigure(0, weight=1)
         
         # Create results table
         self.results_table = self._create_table(
@@ -161,10 +192,18 @@ class FirebaseTab(BaseTab):
                 {"text": "Correct", "width": 80}
             ]
         )
+        self.results_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Create actions section
         self.actions_frame = ctk.CTkFrame(self.content_frame)
-        self.actions_frame.pack(fill="x", padx=10, pady=10)
+        self.actions_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for actions_frame
+        self.actions_frame.grid_columnconfigure(0, weight=1)  # Left space
+        self.actions_frame.grid_columnconfigure(1, weight=0)  # Save button
+        self.actions_frame.grid_columnconfigure(2, weight=1)  # Middle space
+        self.actions_frame.grid_columnconfigure(3, weight=0)  # Check button
+        self.actions_frame.grid_columnconfigure(4, weight=1)  # Right space
         
         # Save to database button
         self.save_button = self._create_button(
@@ -174,7 +213,7 @@ class FirebaseTab(BaseTab):
             width=150,
             height=32
         )
-        self.save_button.pack(side="left", padx=20, pady=10)
+        self.save_button.grid(row=0, column=1, padx=20, pady=10)
         
         # Check results button
         self.check_button = self._create_button(
@@ -184,7 +223,7 @@ class FirebaseTab(BaseTab):
             width=150,
             height=32
         )
-        self.check_button.pack(side="right", padx=20, pady=10)
+        self.check_button.grid(row=0, column=3, padx=20, pady=10)
         
         # Initial data load
         self._refresh_data()
@@ -214,17 +253,9 @@ class FirebaseTab(BaseTab):
         
         # Refresh data
         self._refresh_data()
-        
-    def _refresh_data(self):
-        """Refresh data from API"""
-        # Show loading animation
-        self._show_loading_animation(self.refresh_button, "Refresh Data")
-        
-        # Get data in a separate thread
-        self.parent.after(100, self._fetch_data)
-            
-    def _fetch_data(self):
-        """Fetch data from API"""
+    
+    def _refresh_data_thread(self, original_auto_fetch):
+        """Override the base class method to fetch data from API"""
         try:
             # Get league ID
             league_id = self.selected_league.get()
@@ -272,6 +303,9 @@ class FirebaseTab(BaseTab):
             self._update_fixtures_table()
             self._update_results_table()
             
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+            
             # Reset refresh button
             self.refresh_button.configure(text="Refresh Data", state="normal")
             
@@ -279,6 +313,9 @@ class FirebaseTab(BaseTab):
             logger.error(f"Error fetching data: {str(e)}")
             self.refresh_button.configure(text="Refresh Failed", state="normal")
             self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data"))
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
             
     def _get_upcoming_matches(self, fixtures, team_id, top_n=1):
         """Get upcoming matches for a team"""
@@ -533,6 +570,11 @@ class FirebaseTab(BaseTab):
         self.threshold_label.configure(text=f"Threshold: {self.threshold.get():.2f}")
         
         # Update UI elements with new theme
+        self.controls_refresh_button.configure(
+            fg_color=self.theme["accent"],
+            hover_color=self.theme["primary"]
+        )
+        
         self.refresh_button.configure(
             fg_color=self.theme["accent"],
             hover_color=self.theme["primary"]

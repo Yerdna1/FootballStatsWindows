@@ -42,20 +42,33 @@ class TeamTab(BaseTab):
         # Title
         self._create_title("Team Analysis")
         
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(1, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Notebook row
+        
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)  # League frame
+        self.controls_frame.grid_columnconfigure(1, weight=1)  # Team frame
+        self.controls_frame.grid_columnconfigure(2, weight=0)  # Refresh button
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5), sticky="w")
         
         # Get league options
         league_options = get_league_options()
@@ -67,18 +80,21 @@ class TeamTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Team selection
         self.team_frame = ctk.CTkFrame(self.controls_frame)
-        self.team_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.team_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for team_frame
+        self.team_frame.grid_columnconfigure(0, weight=1)
         
         self.team_label = ctk.CTkLabel(
             self.team_frame, 
             text="Select Team:",
             font=ctk.CTkFont(size=14)
         )
-        self.team_label.pack(pady=(0, 5))
+        self.team_label.grid(row=0, column=0, pady=(0, 5), sticky="w")
         
         # Create dropdown for teams (will be populated later)
         self.team_dropdown = ctk.CTkOptionMenu(
@@ -87,7 +103,7 @@ class TeamTab(BaseTab):
             command=self._on_team_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.team_dropdown.pack(fill="x", padx=10, pady=5)
+        self.team_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Refresh button with animation
         self.refresh_button = self._create_button(
@@ -97,19 +113,29 @@ class TeamTab(BaseTab):
             width=120,
             height=32
         )
-        self.refresh_button.pack(side="right", padx=20, pady=10)
+        self.refresh_button.grid(row=0, column=2, padx=20, pady=10, sticky="e")
         
         # Create notebook for team data
         self.notebook = ttk.Notebook(self.content_frame)
-        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+        self.notebook.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
         
         # Team Overview Tab
         self.overview_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.overview_frame, text="Team Overview")
         
+        # Configure grid for overview_frame
+        self.overview_frame.grid_columnconfigure(0, weight=1)
+        self.overview_frame.grid_rowconfigure(0, weight=0)  # Team info row
+        self.overview_frame.grid_rowconfigure(1, weight=1)  # Stats row
+        
         # Create team info section
         self.team_info_frame = ctk.CTkFrame(self.overview_frame)
-        self.team_info_frame.pack(fill="x", padx=10, pady=10)
+        self.team_info_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for team_info_frame
+        self.team_info_frame.grid_columnconfigure(0, weight=1)
+        self.team_info_frame.grid_rowconfigure(0, weight=0)  # Team name row
+        self.team_info_frame.grid_rowconfigure(1, weight=0)  # Stats frame row
         
         # Team name
         self.team_name_label = ctk.CTkLabel(
@@ -117,11 +143,11 @@ class TeamTab(BaseTab):
             text="Team: ",
             font=ctk.CTkFont(size=18, weight="bold")
         )
-        self.team_name_label.pack(anchor="w", padx=10, pady=5)
+        self.team_name_label.grid(row=0, column=0, sticky="w", padx=10, pady=5)
         
         # Team stats
         self.team_stats_frame = ctk.CTkFrame(self.team_info_frame)
-        self.team_stats_frame.pack(fill="x", padx=10, pady=10)
+        self.team_stats_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
         
         # Create grid layout for stats
         self.team_stats_frame.columnconfigure(0, weight=1)
@@ -143,6 +169,10 @@ class TeamTab(BaseTab):
         self.squad_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.squad_frame, text="Squad")
         
+        # Configure grid for squad_frame
+        self.squad_frame.grid_columnconfigure(0, weight=1)
+        self.squad_frame.grid_rowconfigure(0, weight=1)
+        
         # Create squad table
         self.squad_table = self._create_table(
             self.squad_frame,
@@ -158,10 +188,15 @@ class TeamTab(BaseTab):
                 {"text": "Red Cards", "width": 100}
             ]
         )
+        self.squad_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Fixtures Tab
         self.fixtures_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.fixtures_frame, text="Fixtures")
+        
+        # Configure grid for fixtures_frame
+        self.fixtures_frame.grid_columnconfigure(0, weight=1)
+        self.fixtures_frame.grid_rowconfigure(0, weight=1)
         
         # Create fixtures table
         self.fixtures_table = self._create_table(
@@ -175,6 +210,7 @@ class TeamTab(BaseTab):
                 {"text": "Venue", "width": 150}
             ]
         )
+        self.fixtures_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Initial data load
         self._refresh_data()
@@ -184,19 +220,24 @@ class TeamTab(BaseTab):
         frame = ctk.CTkFrame(parent)
         frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
         
+        # Configure grid for frame
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_rowconfigure(1, weight=1)
+        
         title_label = ctk.CTkLabel(
             frame,
             text=title,
             font=ctk.CTkFont(size=12)
         )
-        title_label.pack(pady=(5, 0))
+        title_label.grid(row=0, column=0, pady=(5, 0))
         
         value_label = ctk.CTkLabel(
             frame,
             text=value,
             font=ctk.CTkFont(size=16, weight="bold")
         )
-        value_label.pack(pady=(0, 5))
+        value_label.grid(row=1, column=0, pady=(0, 5))
         
         return {
             "title": title_label,
@@ -225,13 +266,25 @@ class TeamTab(BaseTab):
         # Refresh team data
         self._fetch_team_data()
         
-    def _refresh_data(self):
-        """Refresh data from API"""
-        # Show loading animation
-        self._show_loading_animation(self.refresh_button, "Refresh Data")
-        
-        # Get data in a separate thread
-        self.parent.after(100, self._fetch_league_data)
+    def _refresh_data_thread(self, original_auto_fetch):
+        """Override the base class method to fetch data from API"""
+        try:
+            # Show loading indicator overlay
+            self.show_loading_indicator()
+            
+            # Fetch league data
+            self._fetch_league_data()
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+        except Exception as e:
+            logger.error(f"Error in refresh data thread: {str(e)}")
+            
+            # Restore auto-fetch flag
+            self.api.disable_auto_fetch = original_auto_fetch
+            
+            # Hide loading indicator
+            self.hide_loading_indicator()
             
     def _fetch_league_data(self):
         """Fetch league data from API"""
@@ -267,6 +320,9 @@ class TeamTab(BaseTab):
             logger.error(f"Error fetching league data: {str(e)}")
             self.refresh_button.configure(text="Refresh Failed", state="normal")
             self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data"))
+            
+            # Hide loading indicator
+            self.hide_loading_indicator()
             
     def _fetch_team_data(self):
         """Fetch team data from API"""
@@ -325,10 +381,16 @@ class TeamTab(BaseTab):
             # Reset refresh button
             self.refresh_button.configure(text="Refresh Data", state="normal")
             
+            # Hide loading indicator
+            self.hide_loading_indicator()
+            
         except Exception as e:
             logger.error(f"Error fetching team data: {str(e)}")
             self.refresh_button.configure(text="Refresh Failed", state="normal")
             self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data"))
+            
+            # Hide loading indicator
+            self.hide_loading_indicator()
             
     def _update_fixtures_table(self, fixtures):
         """Update the fixtures table"""

@@ -41,23 +41,35 @@ class FormTab(BaseTab):
         
     def _create_ui(self):
         """Create the form tab UI elements"""
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(2, weight=1)  # Row for notebook
+        
         # Title
         self._create_title("Form Analysis")
         
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=1)
+        self.controls_frame.grid_columnconfigure(1, weight=1)
+        self.controls_frame.grid_columnconfigure(2, weight=0)  # refresh button column
         
         # League selection
         self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for league_frame
+        self.league_frame.grid_columnconfigure(0, weight=1)
         
         self.league_label = ctk.CTkLabel(
             self.league_frame, 
             text="Select League:",
             font=ctk.CTkFont(size=14)
         )
-        self.league_label.pack(pady=(0, 5))
+        self.league_label.grid(row=0, column=0, pady=(0, 5))
         
         # Get league options
         league_options = get_league_options()
@@ -69,26 +81,30 @@ class FormTab(BaseTab):
             command=self._on_league_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.league_dropdown.pack(fill="x", padx=10, pady=5)
+        self.league_dropdown.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
         # Form length selection
         self.form_length_frame = ctk.CTkFrame(self.controls_frame)
-        self.form_length_frame.pack(side="right", padx=10, pady=10, fill="x", expand=True)
+        self.form_length_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for form_length_frame
+        self.form_length_frame.grid_columnconfigure(0, weight=1)
         
         self.form_length_label = ctk.CTkLabel(
             self.form_length_frame, 
             text="Form Length:",
             font=ctk.CTkFont(size=14)
         )
-        self.form_length_label.pack(pady=(0, 5))
+        self.form_length_label.grid(row=0, column=0, pady=(0, 5))
         
+        # Create dropdown for data types
         self.form_length_segment = ctk.CTkSegmentedButton(
             self.form_length_frame,
             values=["3 Matches", "5 Matches"],
             command=self._on_form_length_changed,
             font=ctk.CTkFont(size=12)
         )
-        self.form_length_segment.pack(fill="x", padx=10, pady=5)
+        self.form_length_segment.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         self.form_length_segment.set("3 Matches" if self.form_length.get() == 3 else "5 Matches")
         
         # Refresh button with animation
@@ -99,15 +115,19 @@ class FormTab(BaseTab):
             width=120,
             height=32
         )
-        self.refresh_button.pack(side="right", padx=20, pady=10)
+        self.refresh_button.grid(row=0, column=2, padx=20, pady=10, sticky="e")
         
         # Create notebook for tables
         self.notebook = ttk.Notebook(self.content_frame)
-        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+        self.notebook.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
         
         # Form Analysis Tab
         self.form_analysis_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.form_analysis_frame, text="Form Analysis")
+        
+        # Configure grid for form_analysis_frame
+        self.form_analysis_frame.grid_columnconfigure(0, weight=1)
+        self.form_analysis_frame.grid_rowconfigure(0, weight=1)
         
         # Create form analysis table
         self.form_analysis_table = self._create_table(
@@ -124,10 +144,16 @@ class FormTab(BaseTab):
                 {"text": "Perf. Diff", "width": 80}
             ]
         )
+        self.form_analysis_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Upcoming Fixtures Tab
         self.fixtures_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.fixtures_frame, text="Upcoming Fixtures")
+        
+        # Configure grid for fixtures_frame
+        self.fixtures_frame.grid_columnconfigure(0, weight=1)
+        self.fixtures_frame.grid_rowconfigure(0, weight=1)
+        self.fixtures_frame.grid_rowconfigure(1, weight=0)  # save button row
         
         # Create upcoming fixtures table
         self.fixtures_table = self._create_table(
@@ -143,6 +169,7 @@ class FormTab(BaseTab):
                 {"text": "Status", "width": 100}
             ]
         )
+        self.fixtures_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Enable sorting for the fixtures table
         for col_idx, col in enumerate(["Team", "Perf. Diff", "Prediction", "Opponent", "Date", "Time", "Venue", "Status"]):
@@ -158,7 +185,7 @@ class FormTab(BaseTab):
             width=200,
             height=32
         )
-        self.save_button.pack(pady=10)
+        self.save_button.grid(row=1, column=0, pady=10)
         
         # Initial data load
         self._refresh_data()

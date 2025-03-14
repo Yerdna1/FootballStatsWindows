@@ -26,6 +26,9 @@ class DbViewTab(BaseTab):
         # Create UI elements
         self._create_ui()
         
+        # Show footer frame for status bar
+        self.show_footer()
+        
         # Load initial data
         self._load_data()
         
@@ -34,9 +37,22 @@ class DbViewTab(BaseTab):
         # Title
         self._create_title(translate("Database View"))
         
+        # Configure grid for content_frame
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_rowconfigure(0, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(1, weight=1)  # Notebook row
+        
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.pack(fill="x", padx=10, pady=10)
+        self.controls_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        
+        # Configure grid for controls_frame
+        self.controls_frame.grid_columnconfigure(0, weight=0)  # Table label
+        self.controls_frame.grid_columnconfigure(1, weight=0)  # Table dropdown
+        self.controls_frame.grid_columnconfigure(2, weight=0)  # Filter frame
+        self.controls_frame.grid_columnconfigure(3, weight=1)  # Spacer
+        self.controls_frame.grid_columnconfigure(4, weight=0)  # Export button
+        self.controls_frame.grid_columnconfigure(5, weight=0)  # Refresh button
         
         # Table selection
         self.table_label = ctk.CTkLabel(
@@ -44,7 +60,7 @@ class DbViewTab(BaseTab):
             text=translate("Select Table:"),
             font=ctk.CTkFont(size=18)
         )
-        self.table_label.pack(side="left", padx=(10, 5))
+        self.table_label.grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
         
         self.table_dropdown = ctk.CTkOptionMenu(
             self.controls_frame,
@@ -53,11 +69,15 @@ class DbViewTab(BaseTab):
             command=self._on_table_changed,
             font=ctk.CTkFont(size=18)
         )
-        self.table_dropdown.pack(side="left", padx=5)
+        self.table_dropdown.grid(row=0, column=1, padx=5, pady=5, sticky="w")
         
         # Filter section
         self.filter_frame = ctk.CTkFrame(self.controls_frame)
-        self.filter_frame.pack(side="left", padx=20)
+        self.filter_frame.grid(row=0, column=2, padx=20, pady=5, sticky="w")
+        
+        # Configure grid for filter_frame
+        self.filter_frame.grid_columnconfigure(0, weight=0)  # Filter label
+        self.filter_frame.grid_columnconfigure(1, weight=0)  # Filter dropdown
         
         # For predictions table
         self.prediction_filter_var = tk.StringVar(value=translate("All"))
@@ -67,7 +87,7 @@ class DbViewTab(BaseTab):
             text=translate("Filter:"),
             font=ctk.CTkFont(size=18)
         )
-        self.prediction_filter_label.pack(side="left", padx=(10, 5))
+        self.prediction_filter_label.grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
         
         self.prediction_filter_dropdown = ctk.CTkOptionMenu(
             self.filter_frame,
@@ -82,7 +102,7 @@ class DbViewTab(BaseTab):
             command=self._on_filter_changed,
             font=ctk.CTkFont(size=18)
         )
-        self.prediction_filter_dropdown.pack(side="left", padx=5)
+        self.prediction_filter_dropdown.grid(row=0, column=1, padx=5, pady=5, sticky="w")
         
         # Refresh button
         self.refresh_button = self._create_button(
@@ -92,7 +112,7 @@ class DbViewTab(BaseTab):
             width=150,
             height=40
         )
-        self.refresh_button.pack(side="right", padx=10)
+        self.refresh_button.grid(row=0, column=5, padx=10, pady=5, sticky="e")
         
         # Export button
         self.export_button = self._create_button(
@@ -102,7 +122,7 @@ class DbViewTab(BaseTab):
             width=150,
             height=40
         )
-        self.export_button.pack(side="right", padx=10)
+        self.export_button.grid(row=0, column=4, padx=10, pady=5, sticky="e")
         
         # Create notebook for different views
         style = ttk.Style()
@@ -110,26 +130,30 @@ class DbViewTab(BaseTab):
         style.configure("TNotebook", font=('Helvetica', 36))  # Add font configuration for the notebook itself
         
         self.notebook = ttk.Notebook(self.content_frame, style="TNotebook")
-        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+        self.notebook.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         
         # Table View Tab
         self.table_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.table_frame, text=translate("Table View"))
         
-        # Create table
+        # Configure table frame to take full width
+        self.table_frame.grid_columnconfigure(0, weight=1)
+        self.table_frame.grid_rowconfigure(0, weight=1)
+        
+        # Create table with increased width
         self.data_table = self._create_table(
             self.table_frame,
             columns=[
-                {"text": "ID", "width": 50},
-                {"text": translate("Team"), "width": 150},
-                {"text": translate("League"), "width": 150},
-                {"text": translate("Opponent"), "width": 150},
-                {"text": translate("Date"), "width": 100},
-                {"text": translate("Prediction"), "width": 120},
-                {"text": translate("Perf. Diff"), "width": 100},
-                {"text": translate("Status"), "width": 100},
-                {"text": translate("Result"), "width": 100},
-                {"text": translate("Correct"), "width": 100}
+                {"text": "ID", "width": 60},
+                {"text": translate("Team"), "width": 180},
+                {"text": translate("League"), "width": 180},
+                {"text": translate("Opponent"), "width": 180},
+                {"text": translate("Date"), "width": 120},
+                {"text": translate("Prediction"), "width": 140},
+                {"text": translate("Perf. Diff"), "width": 120},
+                {"text": translate("Status"), "width": 120},
+                {"text": translate("Result"), "width": 120},
+                {"text": translate("Correct"), "width": 120}
             ]
         )
         
@@ -137,21 +161,30 @@ class DbViewTab(BaseTab):
         self.stats_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.stats_frame, text=translate("Statistics"))
         
+        # Configure grid for stats_frame
+        self.stats_frame.grid_columnconfigure(0, weight=1)
+        self.stats_frame.grid_rowconfigure(0, weight=1)
+        
         # Create stats grid
         self.stats_grid = ctk.CTkFrame(self.stats_frame)
-        self.stats_grid.pack(fill="both", expand=True, padx=20, pady=20)
+        self.stats_grid.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         
-        # Configure grid
+        # Configure grid - single column layout
         self.stats_grid.columnconfigure(0, weight=1)
-        self.stats_grid.columnconfigure(1, weight=1)
         self.stats_grid.rowconfigure(0, weight=1)
         self.stats_grid.rowconfigure(1, weight=1)
+        self.stats_grid.rowconfigure(2, weight=1)
+        self.stats_grid.rowconfigure(3, weight=1)
         
-        # Create stat cards
+        # Create stat cards in a single column
         self.total_card = self._create_stat_card(self.stats_grid, translate("Total Records"), "0", 0, 0)
-        self.completed_card = self._create_stat_card(self.stats_grid, translate("Completed"), "0", 0, 1)
-        self.correct_card = self._create_stat_card(self.stats_grid, translate("Correct"), "0", 1, 0)
-        self.accuracy_card = self._create_stat_card(self.stats_grid, translate("Accuracy"), "0%", 1, 1)
+        self.completed_card = self._create_stat_card(self.stats_grid, translate("Completed"), "0", 1, 0)
+        self.correct_card = self._create_stat_card(self.stats_grid, translate("Correct"), "0", 2, 0)
+        self.accuracy_card = self._create_stat_card(self.stats_grid, translate("Accuracy"), "0%", 3, 0)
+        
+        # Configure grid for footer_frame
+        self.footer_frame.grid_columnconfigure(0, weight=1)
+        self.footer_frame.grid_rowconfigure(0, weight=1)
         
         # Status bar
         self.status_label = ctk.CTkLabel(
@@ -159,26 +192,31 @@ class DbViewTab(BaseTab):
             text="",
             font=ctk.CTkFont(size=14)
         )
-        self.status_label.pack(pady=5)
+        self.status_label.grid(row=0, column=0, pady=5, sticky="ew")
         
     def _create_stat_card(self, parent, title, value, row, col):
         """Create a stat card with title and value"""
         frame = ctk.CTkFrame(parent)
         frame.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
         
+        # Configure grid for frame
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_rowconfigure(1, weight=1)
+        
         title_label = ctk.CTkLabel(
             frame,
             text=title,
             font=ctk.CTkFont(size=18, weight="bold")
         )
-        title_label.pack(pady=(20, 10))
+        title_label.grid(row=0, column=0, pady=(20, 10))
         
         value_label = ctk.CTkLabel(
             frame,
             text=value,
             font=ctk.CTkFont(size=24)
         )
-        value_label.pack(pady=(10, 20))
+        value_label.grid(row=1, column=0, pady=(10, 20))
         
         return {
             "title": title_label,
@@ -195,9 +233,9 @@ class DbViewTab(BaseTab):
         
         # Show/hide prediction filter based on selected table
         if self.current_table.get() == "predictions":
-            self.filter_frame.pack(side="left", padx=20)
+            self.filter_frame.grid(row=0, column=2, padx=20, pady=5, sticky="w")
         else:
-            self.filter_frame.pack_forget()
+            self.filter_frame.grid_forget()
         
         # Reload data
         self._load_data()

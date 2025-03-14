@@ -12,11 +12,12 @@ from modules.form_analyzer import FormAnalyzer
 logger = logging.getLogger(__name__)
 
 class FootballAPI:
-    def __init__(self, api_key, base_url):
+    def __init__(self, api_key, base_url, disable_auto_fetch=False):
         self.api_key = api_key
         self.base_url = base_url
         self.headers = {'x-apisports-key': api_key}
         self.logger = logging.getLogger(__name__)
+        self.disable_auto_fetch = disable_auto_fetch
         self._initialize_cache()
         
     def _initialize_cache(self):
@@ -289,6 +290,10 @@ class FootballAPI:
         cached_data = self._get_from_cache(cache_key, 'medium')  # Standings change less frequently
         if cached_data:
             return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return {} if league_id == ALL_LEAGUES else None
 
         url = f"{self.base_url}/standings"
         if league_id == ALL_LEAGUES:
@@ -331,6 +336,10 @@ class FootballAPI:
         cached_data = self._get_from_cache(cache_key, cache_type)
         if cached_data:
             return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return []
 
         url = f"{self.base_url}/fixtures"
         
@@ -376,12 +385,90 @@ class FootballAPI:
         self._set_cache(cache_key, data, cache_type)
         return data
 
+    def fetch_teams(self, league_id, season='2024'):
+        """Fetch teams for a specific league with caching"""
+        cache_key = f'teams_{league_id}_{season}'
+        cached_data = self._get_from_cache(cache_key, 'medium')  # Teams don't change often
+        if cached_data:
+            return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return []
+
+        url = f"{self.base_url}/teams"
+        
+        if league_id == ALL_LEAGUES:
+            # Get all league IDs except ALL_LEAGUES
+            league_ids = [lid for lid in LEAGUE_NAMES.keys() 
+                         if isinstance(lid, int) and lid != ALL_LEAGUES]
+            
+            # Log the leagues being requested
+            logger.info(f"Fetching teams for {len(league_ids)} leagues")
+            
+            params_list = [
+                {'league': lid, 'season': season}
+                for lid in league_ids
+            ]
+            results = self._batch_request(url, params_list)
+            
+            all_teams = []
+            for params_str, result in results.items():
+                if result and result.get('response'):
+                    teams = result['response']
+                    all_teams.extend(teams)
+                    params = json.loads(params_str)
+                    logger.info(f"Received {len(teams)} teams for league {params['league']}")
+                    
+            self._set_cache(cache_key, all_teams, 'medium')
+            return all_teams
+        
+        params = {
+            'league': league_id,
+            'season': season
+        }
+        results = self._batch_request(url, [params])
+        data = results.get(json.dumps(params), {}).get('response', [])
+        self._set_cache(cache_key, data, 'medium')
+        return data
+
+    def fetch_players(self, league_id, season='2024', team_id=None, page=1):
+        """Fetch players for a specific league or team with caching"""
+        cache_key = f'players_{league_id}_{team_id}_{season}_{page}'
+        cached_data = self._get_from_cache(cache_key, 'medium')  # Players don't change often
+        if cached_data:
+            return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return []
+
+        url = f"{self.base_url}/players"
+        
+        params = {
+            'league': league_id,
+            'season': season,
+            'page': page
+        }
+        
+        if team_id:
+            params['team'] = team_id
+            
+        results = self._batch_request(url, [params])
+        data = results.get(json.dumps(params), {}).get('response', [])
+        self._set_cache(cache_key, data, 'medium')
+        return data
+
     def fetch_team_statistics(self, league_id, team_id, season='2024'):
         """Optimized team statistics fetch with null safety"""
         cache_key = f'team_stats_{league_id}_{team_id}'
         cached_data = self._get_from_cache(cache_key, 'medium')
         if cached_data:
             return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return {}
             
         url = f"{self.base_url}/teams/statistics"
         params = {
@@ -425,6 +512,10 @@ class FootballAPI:
         cached_data = self._get_from_cache(cache_key, 'short')  # Short cache for upcoming fixtures
         if cached_data:
             return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return []
             
         url = f"{self.base_url}/fixtures"
         params = {

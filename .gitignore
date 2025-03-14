@@ -56,3 +56,4 @@ Desktop.ini
 # Inno Setup
 *.exe
 !dist/Football\ Stats.exe
+node_modules

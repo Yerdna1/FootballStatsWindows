@@ -4,7 +4,7 @@ import logging
 from typing import Dict, List, Any, Optional
 import customtkinter as ctk
 
-from modules.config import DEFAULT_SETTINGS, THEMES
+from modules.config import DEFAULT_SETTINGS, THEMES, AVAILABLE_LANGUAGES
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,21 @@ class SettingsManager:
         """Get font size for tables and detail windows"""
         return self.settings.get("font_size", DEFAULT_SETTINGS.get("font_size"))
         
+    def get_language(self) -> str:
+        """Get current language code"""
+        return self.settings.get("language", DEFAULT_SETTINGS.get("language"))
+        
+    def set_language(self, language_code: str) -> bool:
+        """Set current language"""
+        if language_code in AVAILABLE_LANGUAGES:
+            self.settings["language"] = language_code
+            return self._save_settings()
+        return False
+        
+    def get_available_languages(self) -> Dict[str, str]:
+        """Get dictionary of available languages"""
+        return AVAILABLE_LANGUAGES
+        
     def reset_to_defaults(self) -> bool:
         """Reset settings to defaults"""
         self.settings = DEFAULT_SETTINGS.copy()
@@ -103,3 +118,22 @@ class SettingsManager:
         # Set color theme
         # Note: CustomTkinter doesn't support custom color themes directly
         # We're using our own theme system
+        
+    # Firebase related methods
+    def get_firebase_config(self) -> Dict[str, str]:
+        """Get Firebase configuration"""
+        return self.settings.get("firebase_config", {})
+        
+    def save_firebase_config(self, config: Dict[str, str]) -> bool:
+        """Save Firebase configuration"""
+        self.settings["firebase_config"] = config
+        return self._save_settings()
+        
+    def get_firebase_credentials(self) -> Dict[str, str]:
+        """Get saved Firebase credentials for auto-login"""
+        return self.settings.get("firebase_credentials", {})
+        
+    def save_firebase_credentials(self, credentials: Dict[str, str]) -> bool:
+        """Save Firebase credentials for auto-login"""
+        self.settings["firebase_credentials"] = credentials
+        return self._save_settings()

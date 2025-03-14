@@ -72,7 +72,27 @@ DEFAULT_SETTINGS = {
     "leagues": [39],  # Premier League
     "prediction_threshold_level1": PREDICTION_THRESHOLD_LEVEL1,
     "prediction_threshold_level2": PREDICTION_THRESHOLD_LEVEL2,
-    "font_size": 50  # Default font size for tables and detail windows
+    "font_size": 50,  # Default font size for tables and detail windows
+    "language": "sk",  # Default language (Slovak)
+    
+    # Firebase settings
+    "firebase_config": {
+        "apiKey": "",
+        "authDomain": "",
+        "projectId": "",
+        "storageBucket": "",
+        "messagingSenderId": "",
+        "appId": ""
+    },
+    "firebase_credentials": {}  # For storing email/password for auto-login
+}
+
+# Available languages
+AVAILABLE_LANGUAGES = {
+    "sk": "Slovenčina",
+    "cs": "Čeština",
+    "de": "Deutsch",
+    "en": "English"
 }
 
 # Football data fetcher class
