@@ -1,0 +1,27 @@
+{
+    "appearance_mode": "System",
+    "color_theme": "blue",
+    "form_length": 5,
+    "threshold": 0.75,
+    "auto_refresh": false,
+    "refresh_interval": 30,
+    "leagues": [
+        39
+    ],
+    "prediction_threshold_level1": 0.75,
+    "prediction_threshold_level2": 1.05,
+    "font_size": 20,
+    "language": "sk",
+    "firebase_config": {
+        "apiKey": "",
+        "authDomain": "",
+        "projectId": "",
+        "storageBucket": "",
+        "messagingSenderId": "",
+        "appId": ""
+    },
+    "firebase_credentials": {
+        "email": "pavol@gmail.com",
+        "password": "pavol1"
+    }
+}
