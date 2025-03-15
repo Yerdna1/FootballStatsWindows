@@ -14,7 +14,6 @@ echo Copying application files...
 copy "dist\Football Stats.exe" "%INSTALL_DIR%\"
 copy "football_stats.db" "%INSTALL_DIR%\"
 copy "league_names.json" "%INSTALL_DIR%\"
-copy "settings.json" "%INSTALL_DIR%\"
 
 REM Create desktop shortcut
 echo Creating desktop shortcut...
