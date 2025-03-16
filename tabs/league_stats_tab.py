@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
 import logging
+import requests
 from typing import Dict, List, Any, Optional, Callable
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -134,7 +135,7 @@ class LeagueStatsTab(BaseTab):
         self.standings_frame.grid_rowconfigure(0, weight=1)
         
         # Create standings table
-        self.standings_table = self._create_table(
+        standings_container,self.standings_table = self._create_sortable_table(
             self.standings_frame,
             columns=[
                 {"text": "Pos", "width": 50},
@@ -150,7 +151,7 @@ class LeagueStatsTab(BaseTab):
                 {"text": "Form", "width": 100}
             ]
         )
-        self.standings_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        standings_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Charts Tab
         self.charts_frame = ctk.CTkFrame(self.notebook)
@@ -266,15 +267,58 @@ class LeagueStatsTab(BaseTab):
             # Get league ID
             league_id = self.selected_league.get()
             
-            # Fetch standings
-            standings = self.api.fetch_standings(league_id)
+            # Fetch standings with 2023 season (for 2023-2024 season)
+            # Temporarily enable API fetching if it was disabled
+            original_auto_fetch = self.api.disable_auto_fetch
+            self.api.disable_auto_fetch = False
             
-            if not standings or not standings.get('response'):
-                logger.warning(f"No standings for league {league_id}")
-                self.refresh_button.configure(text="Refresh Data", state="normal")
+            # Use 2023 season instead of 2024
+            url = f"{self.api.base_url}/standings"
+            params = {"league": league_id, "season": 2023}
+            
+            # Make direct request to ensure we get fresh data
+            try:
+                logger.info(f"Fetching standings for league {league_id} with season 2023")
+                response = requests.get(url, headers=self.api.headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Cache the data
+                    cache_key = f'standings_{league_id}'
+                    self.api._set_cache(cache_key, data, 'medium')
+                    
+                    # Check if we have valid data
+                    if not data or not data.get('response'):
+                        logger.warning(f"No standings for league {league_id}")
+                        self.refresh_button.configure(text="No Data Found", state="normal")
+                        self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data", state="normal"))
+                        
+                        # Restore original auto-fetch setting
+                        self.api.disable_auto_fetch = original_auto_fetch
+                        return
+                    
+                    # Get standings data
+                    standings_data = data['response'][0]['league']['standings'][0]
+                else:
+                    logger.warning(f"API request failed with status {response.status_code}")
+                    self.refresh_button.configure(text=f"API Error: {response.status_code}", state="normal")
+                    self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data", state="normal"))
+                    
+                    # Restore original auto-fetch setting
+                    self.api.disable_auto_fetch = original_auto_fetch
+                    return
+            except Exception as e:
+                logger.error(f"Error fetching standings: {str(e)}")
+                self.refresh_button.configure(text="API Error", state="normal")
+                self.parent.after(2000, lambda: self.refresh_button.configure(text="Refresh Data", state="normal"))
+                
+                # Restore original auto-fetch setting
+                self.api.disable_auto_fetch = original_auto_fetch
                 return
                 
-            standings_data = standings['response'][0]['league']['standings'][0]
+            # Restore original auto-fetch setting
+            self.api.disable_auto_fetch = original_auto_fetch
             
             # Store standings data
             self.standings_data = standings_data
@@ -345,69 +389,78 @@ class LeagueStatsTab(BaseTab):
                 
             # Bottom 3 teams (Relegation)
             for i in range(max(1, num_teams - 2), num_teams + 1):
-                self.standings_table.tag_configure(i, background='#FFCCCC')
-            
+                self.standings_table.tag_configure(i, background='#FFCCCC')     
+           # Apply default sorting by position (column 0)
+        # Apply default sorting by position (column 0)
+        if hasattr(self.standings_table, 'sorter'):
+            # Sort by position (ascending)
+            self.standings_table.sorter.apply_initial_sort("0", reverse=False)
+                
     def _update_chart(self):
-        """Update the chart based on selected stat type"""
-        # Clear figure
-        self.chart_fig.clear()
-        
-        # Get stat type
-        stat_type = self.stat_var.get()
-        
-        # Create subplot
-        ax = self.chart_fig.add_subplot(111)
-        
-        if not self.standings_data:
-            ax.text(0.5, 0.5, "No data available", ha='center', va='center')
+            """Update the chart based on selected stat type"""
+            # Clear figure
+            self.chart_fig.clear()
+            
+            # Get stat type
+            stat_type = self.stat_var.get()
+            
+            # Create subplot
+            ax = self.chart_fig.add_subplot(111)
+            
+            if not self.standings_data:
+                ax.text(0.5, 0.5, "No data available", ha='center', va='center')
+                self.chart_canvas.draw()
+                return
+                
+            # Prepare data
+            team_names = [team['team']['name'] for team in self.standings_data]
+            
+            if stat_type == "Points":
+                values = [team['points'] for team in self.standings_data]
+                title = "Points by Team"
+                color = 'blue'
+            elif stat_type == "Goals":
+                values = [team['all']['goals']['for'] for team in self.standings_data]
+                title = "Goals Scored by Team"
+                color = 'green'
+            else:  # Form
+                # Calculate form points (W=3, D=1, L=0) with proper None handling
+                values = []
+                for team in self.standings_data:
+                    form = team.get('form', '')
+                    # Check if form is None and use empty string instead
+                    if form is None:
+                        form = ''
+                        
+                    form_points = 0
+                    for char in form:
+                        if char == 'W':
+                            form_points += 3
+                        elif char == 'D':
+                            form_points += 1
+                    values.append(form_points)
+                title = "Recent Form Points by Team"
+                color = 'orange'
+                
+            # Create horizontal bar chart
+            bars = ax.barh(team_names, values, color=color)
+            
+            # Add value labels
+            for bar in bars:
+                width = bar.get_width()
+                ax.text(width + 0.5, bar.get_y() + bar.get_height()/2, f'{width}',
+                        ha='left', va='center')
+            
+            # Set title and labels
+            ax.set_title(title)
+            ax.set_xlabel('Value')
+            ax.set_ylabel('Team')
+            
+            # Adjust layout
+            self.chart_fig.tight_layout()
+            
+            # Draw canvas
             self.chart_canvas.draw()
-            return
-            
-        # Prepare data
-        team_names = [team['team']['name'] for team in self.standings_data]
-        
-        if stat_type == "Points":
-            values = [team['points'] for team in self.standings_data]
-            title = "Points by Team"
-            color = 'blue'
-        elif stat_type == "Goals":
-            values = [team['all']['goals']['for'] for team in self.standings_data]
-            title = "Goals Scored by Team"
-            color = 'green'
-        else:  # Form
-            # Calculate form points (W=3, D=1, L=0)
-            values = []
-            for team in self.standings_data:
-                form = team.get('form', '')
-                form_points = 0
-                for char in form:
-                    if char == 'W':
-                        form_points += 3
-                    elif char == 'D':
-                        form_points += 1
-                values.append(form_points)
-            title = "Recent Form Points by Team"
-            color = 'orange'
-            
-        # Create horizontal bar chart
-        bars = ax.barh(team_names, values, color=color)
-        
-        # Add value labels
-        for bar in bars:
-            width = bar.get_width()
-            ax.text(width + 0.5, bar.get_y() + bar.get_height()/2, f'{width}',
-                    ha='left', va='center')
-        
-        # Set title and labels
-        ax.set_title(title)
-        ax.set_xlabel('Value')
-        ax.set_ylabel('Team')
-        
-        # Adjust layout
-        self.chart_fig.tight_layout()
-        
-        # Draw canvas
-        self.chart_canvas.draw()
         
     def _update_stats(self):
         """Update the league stats"""

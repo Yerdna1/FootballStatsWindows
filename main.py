@@ -20,13 +20,13 @@ from modules.translations import translate, set_language, get_language
 from tabs.form_tab import FormTab
 from tabs.login.login_tab import LoginTab
 from tabs.settings_tab import SettingsTab
-from tabs.stats_tab import StatsTab
+
+from tabs.stats_tab.stats_tab import StatsTab
 from tabs.winless_tab import WinlessTab
 from tabs.team_tab import TeamTab
 from tabs.next_round_tab import NextRoundTab
 from tabs.league_stats_tab import LeagueStatsTab
 from tabs.data_collection_tab import DataCollectionTab
-from tabs.firebase_tab import FirebaseTab
 from tabs.db_view_tab import DbViewTab
 from tabs.about_tab import AboutTab
 from tabs.logs_tab import LogsTab
@@ -402,7 +402,7 @@ class FootballStatsApp(ctk.CTk):
                 "league_stats": LeagueStatsTab,
                 "form": FormTab,
                 "data_collection": DataCollectionTab,
-                "firebase": FirebaseTab,
+
                 "stats": StatsTab,
                 "db_view": DbViewTab,
                 "logs": LogsTab,

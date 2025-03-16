@@ -1,6 +1,6 @@
 {
-    "appearance_mode": "System",
-    "color_theme": "blue",
+    "appearance_mode": "Dark",
+    "color_theme": "green",
     "form_length": 5,
     "threshold": 0.75,
     "auto_refresh": false,
@@ -10,7 +10,7 @@
     ],
     "prediction_threshold_level1": 0.75,
     "prediction_threshold_level2": 1.05,
-    "font_size": 20,
+    "font_size": 64,
     "language": "sk",
     "firebase_config": {
         "apiKey": "",
@@ -21,7 +21,7 @@
         "appId": ""
     },
     "firebase_credentials": {
-        "email": "pavol@gmail.com",
-        "password": "pavol1"
+        "email": "admin@footballstats.com",
+        "password": "admin123"
     }
 }

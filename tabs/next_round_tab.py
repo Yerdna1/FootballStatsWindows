@@ -106,7 +106,7 @@ class NextRoundTab(BaseTab):
         self.round_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
         # Create fixtures table
-        self.fixtures_table = self._create_table(
+        fixtures_container,self.fixtures_table = self._create_sortable_table(
             self.fixtures_frame,
             columns=[
                 {"text": "Date", "width": 100},
@@ -119,7 +119,9 @@ class NextRoundTab(BaseTab):
                 {"text": "Prediction", "width": 150}
             ]
         )
-        self.fixtures_table.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        fixtures_container.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+
+
         
         # Create details section
         self.details_frame = ctk.CTkFrame(self.content_frame)
@@ -321,6 +323,11 @@ class NextRoundTab(BaseTab):
                     ),
                     tags=(fixture['fixture']['id'],)
                 )
+                
+                # Apply default sorting by date and time
+                if hasattr(self.fixtures_table, 'sorter'):
+                    # Sort by date (column 0) first
+                    self.fixtures_table.sorter.apply_initial_sort("0", reverse=False)
             except Exception as e:
                 logger.error(f"Error processing fixture: {str(e)}")
                 continue

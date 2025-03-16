@@ -546,3 +546,57 @@ class FootballAPI:
             self.logger.error(f"Error fetching next fixtures: {str(e)}")
             
         return []
+        
+    def fetch_squad(self, team_id, season='2024'):
+        """Fetch squad data for a team with caching"""
+        cache_key = f'squad_{team_id}_{season}'
+        cached_data = self._get_from_cache(cache_key, 'medium')  # Squad doesn't change often
+        if cached_data:
+            return cached_data
+            
+        # If auto-fetch is disabled and no cache, return empty result
+        if self.disable_auto_fetch:
+            return None
+
+        url = f"{self.base_url}/players/squads"
+        params = {
+            'team': team_id
+        }
+        
+        try:
+            results = self._batch_request(url, [params])
+            data = results.get(json.dumps(params))
+            
+            if data:
+                self._set_cache(cache_key, data, 'medium')
+                return data
+                
+        except Exception as e:
+            self.logger.error(f"Error fetching squad for team {team_id}: {str(e)}")
+            
+        return None
+    
+    def fetch_fixture(self, fixture_id):
+        """
+        Fetch details for a specific fixture by its ID.
+        
+        Args:
+            fixture_id (int or str): The unique identifier of the fixture
+        
+        Returns:
+            Dict: Detailed information about the fixture, or None if not found
+        """
+        # Use existing fetch_fixtures method with specific fixture_id
+        try:
+            url = f"{self.base_url}/fixtures"
+            params = {'id': fixture_id}
+            
+            results = self._batch_request(url, [params])
+            data = results.get(json.dumps(params), {}).get('response', [])
+            
+            # Return the first (and typically only) fixture in the response
+            return data[0] if data else None
+        
+        except Exception as e:
+            logger.error(f"Error fetching fixture {fixture_id}: {str(e)}")
+            return None

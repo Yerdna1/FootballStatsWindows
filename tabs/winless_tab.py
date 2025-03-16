@@ -123,7 +123,7 @@ class WinlessTab(BaseTab):
         self.tables_frame.grid_rowconfigure(0, weight=1)
         
         # Create winless streaks table with a single column layout
-        self.winless_table = self._create_table(
+        table_container,self.winless_table = self._create_sortable_table(
             self.tables_frame,
             columns=[
                 {"text": "Team", "width": 200},
@@ -136,7 +136,7 @@ class WinlessTab(BaseTab):
         )
         
         # Position the table to fill the entire frame
-        self.winless_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        table_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Initial data load
         self._refresh_data()
@@ -176,37 +176,223 @@ class WinlessTab(BaseTab):
             # Fetch standings
             standings = self.api.fetch_standings(league_id)
             
-            if not standings or not standings.get('response'):
-                logger.warning(f"No standings for league {league_id}")
+            if not standings or not isinstance(standings, dict) or 'response' not in standings:
+                logger.warning(f"No standings or invalid response format for league {league_id}")
                 self.refresh_button.configure(text="Refresh Data", state="normal")
+                self.hide_loading_indicator()
                 return
                 
             standings_data = standings['response'][0]['league']['standings'][0]
             
             # Fetch fixtures
-            fixtures = self.api.fetch_fixtures(league_id)
+            fixtures_response = self.api.fetch_fixtures(league_id)
             
-            # Process data (placeholder)
+            # Log the fixtures response for debugging
+            logger.debug(f"Fixtures response type: {type(fixtures_response)}")
+            if isinstance(fixtures_response, dict) and 'response' in fixtures_response:
+                logger.debug(f"Fixtures response keys: {fixtures_response.keys()}")
+                fixtures = fixtures_response['response']
+            elif isinstance(fixtures_response, list):
+                logger.debug(f"Fixtures response is a list with {len(fixtures_response)} items")
+                fixtures = fixtures_response
+            else:
+                fixtures = None
+            
+            # Check if fixtures is valid
+            if not fixtures:
+                logger.warning(f"No fixtures or invalid response format for league {league_id}")
+                
+                # Show a message in the table
+                self.winless_data = [{
+                    'team': 'No fixtures available',
+                    'streak': '',
+                    'last_win': '',
+                    'days_since_win': '',
+                    'next_opponent': 'Please try another league',
+                    'match_date': ''
+                }]
+                
+                # Update the table with the message
+                self._update_table()
+                
+                # Reset UI
+                self.refresh_button.configure(text="Refresh Data", state="normal")
+                self.hide_loading_indicator()
+                return
+                
+            # Check if fixtures is empty
+            if len(fixtures) == 0:
+                logger.warning(f"No fixtures found for league {league_id}")
+                
+                # Show a message in the table
+                self.winless_data = [{
+                    'team': 'No fixtures found',
+                    'streak': '',
+                    'last_win': '',
+                    'days_since_win': '',
+                    'next_opponent': 'Please try another league',
+                    'match_date': ''
+                }]
+                
+                # Update the table with the message
+                self._update_table()
+                
+                # Reset UI
+                self.refresh_button.configure(text="Refresh Data", state="normal")
+                self.hide_loading_indicator()
+                return
+            
+            # Process data to find streaks
             self.winless_data = []
             
-            # In a real implementation, we would analyze the fixtures to find winless streaks
-            # For now, just use placeholder data
-            for i, team in enumerate(standings_data[:10]):
-                team_name = team['team']['name']
+            # Create a dictionary of teams
+            teams = {}
+            for team in standings_data:
                 team_id = team['team']['id']
-                
-                # Add placeholder data
-                self.winless_data.append({
-                    'team': team_name,
+                team_name = team['team']['name']
+                teams[team_id] = {
                     'team_id': team_id,
+                    'team': team_name,
                     'league': get_league_display_name(league_id),
-                    'streak': i + 1,
-                    'last_win': '2024-01-01',
-                    'days_since_win': (i + 1) * 7,
-                    'next_opponent': 'Opponent ' + str(i + 1),
-                    'match_date': '2024-03-15',
-                    'venue': 'Home' if i % 2 == 0 else 'Away'
-                })
+                    'fixtures': [],
+                    'next_fixture': None
+                }
+            
+            # Get current date
+            from datetime import datetime, timedelta
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            
+            # Process fixtures
+            for fixture in fixtures:
+                # Get basic fixture info
+                fixture_id = fixture['fixture']['id']
+                fixture_date = fixture['fixture']['date'].split('T')[0]  # YYYY-MM-DD
+                home_team_id = fixture['teams']['home']['id']
+                away_team_id = fixture['teams']['away']['id']
+                home_team_name = fixture['teams']['home']['name']
+                away_team_name = fixture['teams']['away']['name']
+                home_score = fixture['goals']['home']
+                away_score = fixture['goals']['away']
+                status = fixture['fixture']['status']['short']
+                
+                # Skip fixtures that haven't been played yet
+                if status != 'FT' or home_score is None or away_score is None:
+                    # But save as next fixture if it's in the future
+                    if fixture_date >= current_date:
+                        # For home team
+                        if home_team_id in teams and (teams[home_team_id]['next_fixture'] is None or 
+                                                     fixture_date < teams[home_team_id]['next_fixture']['date']):
+                            teams[home_team_id]['next_fixture'] = {
+                                'fixture_id': fixture_id,
+                                'date': fixture_date,
+                                'opponent': away_team_name,
+                                'venue': 'Home'
+                            }
+                        
+                        # For away team
+                        if away_team_id in teams and (teams[away_team_id]['next_fixture'] is None or 
+                                                     fixture_date < teams[away_team_id]['next_fixture']['date']):
+                            teams[away_team_id]['next_fixture'] = {
+                                'fixture_id': fixture_id,
+                                'date': fixture_date,
+                                'opponent': home_team_name,
+                                'venue': 'Away'
+                            }
+                    continue
+                
+                # Add to home team fixtures
+                if home_team_id in teams:
+                    teams[home_team_id]['fixtures'].append({
+                        'fixture_id': fixture_id,
+                        'date': fixture_date,
+                        'opponent': away_team_name,
+                        'home': True,
+                        'result': 'W' if home_score > away_score else ('D' if home_score == away_score else 'L')
+                    })
+                
+                # Add to away team fixtures
+                if away_team_id in teams:
+                    teams[away_team_id]['fixtures'].append({
+                        'fixture_id': fixture_id,
+                        'date': fixture_date,
+                        'opponent': home_team_name,
+                        'home': False,
+                        'result': 'W' if away_score > home_score else ('D' if home_score == away_score else 'L')
+                    })
+            
+            # Sort fixtures by date (newest first)
+            for team_id in teams:
+                teams[team_id]['fixtures'].sort(key=lambda x: x['date'], reverse=True)
+            
+            # Calculate streaks
+            for team_id, team_data in teams.items():
+                # Skip teams with no fixtures
+                if not team_data['fixtures']:
+                    continue
+                
+                streak = 0
+                last_win_date = None
+                last_loss_date = None
+                
+                # Check each fixture from newest to oldest
+                for fixture in team_data['fixtures']:
+                    if streak_type == 'Winless':
+                        # For winless streak, we're looking for matches without a win
+                        if fixture['result'] != 'W':
+                            streak += 1
+                        else:
+                            # Found a win, this is the end of the streak
+                            last_win_date = fixture['date']
+                            break
+                    else:  # Lossless
+                        # For lossless streak, we're looking for matches without a loss
+                        if fixture['result'] != 'L':
+                            streak += 1
+                        else:
+                            # Found a loss, this is the end of the streak
+                            last_loss_date = fixture['date']
+                            break
+                
+                # Only include teams with a streak
+                if streak > 0:
+                    # Calculate days since last win/loss
+                    days_since = 0
+                    if streak_type == 'Winless' and last_win_date:
+                        last_win_datetime = datetime.strptime(last_win_date, '%Y-%m-%d')
+                        days_since = (datetime.now() - last_win_datetime).days
+                    elif streak_type == 'Lossless' and last_loss_date:
+                        last_loss_datetime = datetime.strptime(last_loss_date, '%Y-%m-%d')
+                        days_since = (datetime.now() - last_loss_datetime).days
+                    
+                    # Add to winless data
+                    streak_data = {
+                        'team': team_data['team'],
+                        'team_id': team_id,
+                        'league': team_data['league'],
+                        'streak': streak,
+                        'days_since_win': days_since if streak_type == 'Winless' else days_since,
+                    }
+                    
+                    # Add last win/loss date
+                    if streak_type == 'Winless':
+                        streak_data['last_win'] = last_win_date or 'Never'
+                    else:
+                        streak_data['last_win'] = last_loss_date or 'Never'  # Actually last loss
+                    
+                    # Add next opponent
+                    if team_data['next_fixture']:
+                        streak_data['next_opponent'] = team_data['next_fixture']['opponent']
+                        streak_data['match_date'] = team_data['next_fixture']['date']
+                        streak_data['venue'] = team_data['next_fixture']['venue']
+                    else:
+                        streak_data['next_opponent'] = 'None scheduled'
+                        streak_data['match_date'] = 'N/A'
+                        streak_data['venue'] = 'N/A'
+                    
+                    self.winless_data.append(streak_data)
+            
+            # Sort by streak length (descending)
+            self.winless_data.sort(key=lambda x: x['streak'], reverse=True)
             
             # Update table
             self._update_table()
@@ -255,6 +441,10 @@ class WinlessTab(BaseTab):
             
         # Configure tags
         self.winless_table.tag_configure('streak', foreground='red')
+        
+        if hasattr(self.winless_table, 'sorter'):
+            # Sort by streak (column 1) in descending order
+            self.winless_table.sorter.apply_initial_sort("1", reverse=True)
     
     def update_settings(self):
         """Update settings from settings manager"""

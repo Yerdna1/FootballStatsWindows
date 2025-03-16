@@ -142,12 +142,10 @@ class BaseTab:
         
         # Create frame for table
         frame = ctk.CTkFrame(parent)
-        frame.grid(sticky="nsew", padx=10, pady=10)
         
-           # Configure the frame's grid
+        # Configure the frame's grid
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
-
         
         # Configure style for larger font
         style = ttk.Style()
@@ -185,6 +183,27 @@ class BaseTab:
         # Configure grid weights
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_rowconfigure(0, weight=1)
+        
+        # Add sorting functionality
+        try:
+            from modules.table_sorter import TableSorter
+            sorter = TableSorter(table)
+            table.sorter = sorter
+            
+            # Apply default sort by date if a date column exists
+            date_columns = ["date", "time", "timestamp", "created", "modified"]
+            for i, col in enumerate(columns):
+                col_text = col.get("text", "") if isinstance(col, dict) else col
+                col_text = str(col_text).lower()
+                if any(date_name in col_text for date_name in date_columns):
+                    sorter.apply_initial_sort(f"col{i}", reverse=True)
+                    break
+        except Exception as e:
+            logger.error(f"Failed to add sorting functionality: {str(e)}")
+        
+        # For backward compatibility, return just the table
+        # But also provide the frame as an attribute that can be accessed if needed
+        table.container_frame = frame
         
         return table
         
@@ -348,6 +367,80 @@ class BaseTab:
         
         # This method should be overridden by subclasses to update specific UI elements
         pass
+    
+    def create_sortable_table(self, parent, columns, height=400):
+        """Create a sortable table with the given columns and increased font size."""
+        table = self._create_table(parent, columns, height)
+        
+        # Return both the frame and the table
+        return table.container_frame, table
+    
+    def _create_sortable_table(self, parent, columns=None, height=10):
+        """Create a sortable treeview table with column headers."""
+        # Create a frame to hold the treeview and scrollbars
+        frame = ctk.CTkFrame(parent)
+        
+        # Create horizontal and vertical scrollbars
+        h_scrollbar = ttk.Scrollbar(frame, orient="horizontal")
+        v_scrollbar = ttk.Scrollbar(frame, orient="vertical")
+        
+        # Configure the treeview
+        table = ttk.Treeview(
+            frame,
+            columns=[col["text"] for col in columns] if columns else [],
+            height=height,
+            selectmode="extended",
+            yscrollcommand=v_scrollbar.set,
+            xscrollcommand=h_scrollbar.set
+        )
+        
+        # Configure scrollbars
+        h_scrollbar.configure(command=table.xview)
+        v_scrollbar.configure(command=table.yview)
+        
+        # Place scrollbars
+        v_scrollbar.pack(side="right", fill="y")
+        h_scrollbar.pack(side="bottom", fill="x")
+        
+        # Place treeview
+        table.pack(side="left", fill="both", expand=True)
+        
+        # Configure column headings and widths
+        table.column("#0", width=0, stretch=False)  # Hidden ID column
+        table.heading("#0", text="", anchor="w")
+        
+        if columns:
+            for i, col in enumerate(columns):
+                # Use column ID as the index (easier for sorting)
+                col_id = col.get("id", str(i))
+                table.column(i, width=col.get("width", 100), stretch=col.get("stretch", True))
+                table.heading(i, text=col.get("text", ""), anchor=col.get("anchor", "w"))
+        
+        # Import and initialize the TableSorter
+        from modules.table_sorter import TableSorter
+        sorter = TableSorter(table)
+        
+        # Store the sorter reference in the table for future access
+        table.sorter = sorter
+        
+        # Apply default sort by date if a date column exists
+        if columns:
+            # Look for date columns - common names
+            date_columns = ["date", "time", "timestamp", "created", "modified"]
+            for i, col in enumerate(columns):
+                col_text = col.get("text", "").lower()
+                if any(date_name in col_text for date_name in date_columns):
+                    # Found a date column, sort by it (newest first)
+                    sorter.apply_initial_sort(str(i), reverse=True)
+                    break
+        
+        return frame, table
+    
+    
+    
+
+
+
 
 class ToolTip:
     """Custom tooltip implementation"""
@@ -393,3 +486,6 @@ class ToolTip:
         if self.tooltip_window:
             self.tooltip_window.destroy()
             self.tooltip_window = None
+    
+    
+    

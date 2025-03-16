@@ -55,21 +55,58 @@ class UserManagement:
         self.frame.grid_rowconfigure(3, weight=1)  # Give row with table more weight
         self.frame.grid_columnconfigure(0, weight=1)
         
+        # Title and buttons row
+        header_frame = ctk.CTkFrame(self.frame)
+        header_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        
+        # Configure grid for header_frame - ensure all columns are configured
+        header_frame.grid_columnconfigure(0, weight=2)  # Title
+        header_frame.grid_columnconfigure(1, weight=0)  # Refresh button
+        header_frame.grid_columnconfigure(2, weight=0)  # Grant button
+        header_frame.grid_columnconfigure(3, weight=0)  # Revoke button
+        header_frame.grid_columnconfigure(4, weight=0)  # Delete button
+        
         # Title
         title_label = ctk.CTkLabel(
-            self.frame,
+            header_frame,
             text="User Management",
             font=("Helvetica", 16, "bold")
         )
-        title_label.grid(row=0, column=0, pady=(10, 20))
+        title_label.grid(row=0, column=0, pady=10, padx=10, sticky="w")
         
         # Refresh button
         self.refresh_button = self.create_button(
-            self.frame,
-            text="Refresh Users",
+            header_frame,
+            text="Refresh",
             command=self.refresh_users_callback
         )
-        self.refresh_button.grid(row=1, column=0, pady=(0, 10))
+        self.refresh_button.grid(row=0, column=1, padx=5, pady=10)
+        
+        # Grant license button
+        self.grant_button = self.create_button(
+            header_frame,
+            text="Grant License",
+            command=lambda: self.update_license_callback(True)
+        )
+        self.grant_button.grid(row=0, column=2, padx=5, pady=10)
+        
+        # Revoke license button
+        self.revoke_button = self.create_button(
+            header_frame,
+            text="Revoke License",
+            command=lambda: self.update_license_callback(False)
+        )
+        self.revoke_button.grid(row=0, column=3, padx=5, pady=10)
+        
+        # Delete user button
+        self.delete_button = self.create_button(
+            header_frame,
+            text="Delete User",
+            command=self.delete_user_callback,
+            fg_color="red",
+            hover_color="#C00000"
+        )
+        self.delete_button.grid(row=0, column=4, padx=5, pady=10)
         
         # Users table
         self.users_table = self.create_table(
@@ -77,45 +114,10 @@ class UserManagement:
             ["Email", "Admin", "License", "Last Login"],
             height=200
         )
-        self.users_table.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        self.users_table.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         
         # Bind selection event
         self.users_table.bind("<<TreeviewSelect>>", self._on_user_selected)
-        
-        # Action buttons frame
-        action_frame = ctk.CTkFrame(self.frame)
-        action_frame.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
-        
-        # Configure grid for action_frame
-        action_frame.grid_columnconfigure(0, weight=1)
-        action_frame.grid_columnconfigure(1, weight=1)
-        action_frame.grid_columnconfigure(2, weight=1)
-        
-        # Grant license button
-        self.grant_button = self.create_button(
-            action_frame,
-            text="Grant License",
-            command=lambda: self.update_license_callback(True)
-        )
-        self.grant_button.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        
-        # Revoke license button
-        self.revoke_button = self.create_button(
-            action_frame,
-            text="Revoke License",
-            command=lambda: self.update_license_callback(False)
-        )
-        self.revoke_button.grid(row=0, column=1, padx=5, pady=5)
-        
-        # Delete user button
-        self.delete_button = self.create_button(
-            action_frame,
-            text="Delete User",
-            command=self.delete_user_callback,
-            fg_color="red",
-            hover_color="#C00000"
-        )
-        self.delete_button.grid(row=0, column=2, padx=5, pady=5, sticky="e")
         
         # Message label for errors/info
         self.message_label = ctk.CTkLabel(
@@ -124,7 +126,7 @@ class UserManagement:
             font=("Helvetica", 12),
             text_color="gray"
         )
-        self.message_label.grid(row=4, column=0, pady=(10, 0))
+        self.message_label.grid(row=2, column=0, pady=(10, 0))
         
     def _on_user_selected(self, event):
         """
@@ -144,11 +146,19 @@ class UserManagement:
             user_id = self.users_table.item(item_id, "values")[-1]  # User ID is stored as the last value
             
             # Find user in users list
+            found = False
             for user in self.users:
                 if user["id"] == user_id:
                     self.selected_user = user
+                    found = True
+                    logger.info(f"Selected user: {user.get('email')}, ID: {user_id}")
                     break
+                    
+            if not found:
+                logger.warning(f"Could not find user with ID: {user_id}")
+                self.selected_user = None
         else:
+            logger.info("No user selected")
             self.selected_user = None
             
     def update_users_table(self, users: List[Dict]):

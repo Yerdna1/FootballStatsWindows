@@ -537,19 +537,83 @@ class LoginTab(BaseTab):
     def _perform_refresh_permission_users(self):
         """Perform users refresh for permissions tab"""
         try:
+            # Log the start of the refresh
+            logger.info("Starting permission users refresh")
+            
+            # Check if we're signed in
+            if not self.firebase_auth.is_signed_in():
+                logger.error("Not signed in, cannot fetch users")
+                self.admin_panel.permissions_management.show_error("You must be logged in as admin to manage permissions")
+                self.admin_panel.permissions_management.reset_button_refresh(self.button_manager)
+                return
+                
+            # Log current user
+            current_user = self.firebase_auth.current_user
+            logger.info(f"Current user: {current_user.get('email') if current_user else 'None'}")
+            
+            # Check if Firebase is initialized
+            logger.info(f"Firebase initialized: {self.firebase_auth.is_initialized()}")
+            if not self.firebase_auth.is_initialized():
+                logger.error("Firebase not initialized, initializing now...")
+                self.firebase_auth.initialize()
+                
+            # Check if user is admin
+            success_admin, is_admin = self.firebase_auth.check_is_admin(current_user.get('localId'))
+            logger.info(f"Admin check: success={success_admin}, is_admin={is_admin}")
+            
+            if not is_admin:
+                logger.error("User is not an admin, cannot fetch users")
+                self.admin_panel.permissions_management.show_error("You must be logged in as admin to manage permissions")
+                self.admin_panel.permissions_management.reset_button_refresh(self.button_manager)
+                return
+            
             # Get all users
+            logger.info("Calling get_all_users...")
             success, users = self.firebase_auth.get_all_users()
             
-            if success:
+            # Log the raw result
+            logger.info(f"Raw result from get_all_users: success={success}, users={users}")
+            
+            # Log the result
+            logger.info(f"Got users: success={success}, count={len(users) if isinstance(users, list) else 'error'}")
+            
+            if success and isinstance(users, list):
+                # Log the users for debugging
+                logger.info("Listing all users:")
+                for i, user in enumerate(users):
+                    logger.info(f"User {i+1}: {user.get('email')}, ID: {user.get('id')}, Admin: {user.get('is_admin', False)}")
+                
+                # Check if users list is empty
+                if len(users) == 0:
+                    logger.warning("Users list is empty, creating a test user for debugging")
+                    # Create a test user for debugging
+                    test_user = {
+                        "id": "test-user-id",
+                        "email": "test@example.com",
+                        "is_admin": False,
+                        "has_license": True
+                    }
+                    users = [test_user]
+                
                 # Update user dropdown
+                logger.info("Updating user dropdown...")
                 non_admin_count = self.admin_panel.permissions_management.update_user_dropdown(users)
                 
                 # Update status
                 self.admin_panel.permissions_management.show_info(f"Found {non_admin_count} non-admin users")
                 
+                # Log the completion
+                logger.info(f"Updated user dropdown with {non_admin_count} non-admin users")
+                logger.info(f"Dropdown values: {self.admin_panel.permissions_management.user_dropdown.cget('values')}")
+                
+                # Force update of the dropdown
+                self.admin_panel.permissions_management.user_dropdown.configure(values=self.admin_panel.permissions_management.user_dropdown.cget('values'))
+                
             else:
                 # Show error message
-                self.admin_panel.permissions_management.show_error(f"Error: {users}")
+                error_msg = f"Error: {users}"
+                logger.error(f"Error getting users: {error_msg}")
+                self.admin_panel.permissions_management.show_error(error_msg)
                 
             # Reset button
             self.admin_panel.permissions_management.reset_button_refresh(self.button_manager)
@@ -566,6 +630,9 @@ class LoginTab(BaseTab):
             logger.warning("Admin panel not initialized yet")
             return
             
+        # Log the selected option for debugging
+        logger.info(f"Loading permissions for selected option: {selected_option}")
+            
         if selected_option == "Select a user...":
             # Reset all checkboxes
             self.admin_panel.permissions_management.reset_permissions()
@@ -574,26 +641,34 @@ class LoginTab(BaseTab):
         # Get user ID
         user_id = self.admin_panel.permissions_management.get_selected_user_id()
         if not user_id:
+            logger.warning(f"No user ID found for selected option: {selected_option}")
+            self.admin_panel.permissions_management.show_warning("Could not find user ID for selected user")
             return
             
+        # Log the user ID for debugging
+        logger.info(f"Loading permissions for user ID: {user_id}")
+            
         # Show loading message
-        self.admin_panel.permissions_management.show_info("Loading permissions...")
+        self.admin_panel.permissions_management.show_info(f"Loading permissions for {selected_option}...")
         
         # Load in a separate thread
-        self.parent.after(100, lambda: self._perform_load_user_permissions(user_id))
+        self.parent.after(100, lambda: self._perform_load_user_permissions(user_id, selected_option))
         
-    def _perform_load_user_permissions(self, user_id):
+    def _perform_load_user_permissions(self, user_id, selected_option):
         """Perform loading of user permissions"""
         try:
             # Get permissions
             success, permissions = self.firebase_auth.get_user_tab_permissions(user_id)
+            
+            # Log the result
+            logger.info(f"Got permissions for user {user_id}: success={success}, permissions={permissions}")
             
             if success:
                 # Update checkboxes
                 self.admin_panel.permissions_management.set_permissions(permissions)
                     
                 # Update status
-                self.admin_panel.permissions_management.show_success("Permissions loaded successfully")
+                self.admin_panel.permissions_management.show_success(f"Permissions loaded for {selected_option}")
                 
             else:
                 # Show error message

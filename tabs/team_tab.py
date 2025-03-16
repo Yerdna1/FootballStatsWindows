@@ -174,7 +174,7 @@ class TeamTab(BaseTab):
         self.squad_frame.grid_rowconfigure(0, weight=1)
         
         # Create squad table
-        self.squad_table = self._create_table(
+        squad_container,self.squad_table = self._create_sortable_table(
             self.squad_frame,
             columns=[
                 {"text": "Player", "width": 150},
@@ -188,7 +188,9 @@ class TeamTab(BaseTab):
                 {"text": "Red Cards", "width": 100}
             ]
         )
-        self.squad_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        squad_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
+
         
         # Fixtures Tab
         self.fixtures_frame = ctk.CTkFrame(self.notebook)
@@ -199,7 +201,7 @@ class TeamTab(BaseTab):
         self.fixtures_frame.grid_rowconfigure(0, weight=1)
         
         # Create fixtures table
-        self.fixtures_table = self._create_table(
+        fixtures_container, self.fixtures_table = self._create_sortable_table(
             self.fixtures_frame,
             columns=[
                 {"text": "Date", "width": 100},
@@ -210,7 +212,9 @@ class TeamTab(BaseTab):
                 {"text": "Venue", "width": 150}
             ]
         )
-        self.fixtures_table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        fixtures_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
+
         
         # Initial data load
         self._refresh_data()
@@ -427,33 +431,100 @@ class TeamTab(BaseTab):
                 )
             )
             
+        # Apply default sorting by date (column 0)
+        if hasattr(self.fixtures_table, 'sorter'):
+            # Sort by date (ascending) to show upcoming fixtures first
+            self.fixtures_table.sorter.apply_initial_sort("0", reverse=False)
+            
     def _update_squad_table(self, team_id):
-        """Update the squad table with placeholder data"""
+        """Update the squad table with real squad data from API"""
         # Clear table
         for item in self.squad_table.get_children():
             self.squad_table.delete(item)
             
-        # Add placeholder data
-        positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"]
-        nationalities = ["England", "Spain", "Germany", "France", "Italy"]
-        
-        for i in range(20):
-            position = positions[i % len(positions)]
-            nationality = nationalities[i % len(nationalities)]
+        try:
+            # Fetch squad data from API
+            squad_data = self.api.fetch_squad(team_id)
             
-            # Add row
+            # Check if squad data is valid
+            if not squad_data or not isinstance(squad_data, dict) or 'response' not in squad_data:
+                logger.warning(f"No squad data for team {team_id}")
+                
+                # Add a message row
+                self.squad_table.insert(
+                    "", "end",
+                    values=(
+                        "No squad data available",
+                        "", "", "", "", "", "", "", ""
+                    )
+                )
+                return
+                
+            # Process squad data
+            if len(squad_data['response']) == 0:
+                # No squad data
+                self.squad_table.insert(
+                    "", "end",
+                    values=(
+                        "No squad data available",
+                        "", "", "", "", "", "", "", ""
+                    )
+                )
+                return
+                
+            # Get the first response (should be the only one)
+            squad = squad_data['response'][0]
+            
+            # Check if squad has players
+            if 'players' not in squad or not squad['players']:
+                # No players in squad
+                self.squad_table.insert(
+                    "", "end",
+                    values=(
+                        "No players in squad data",
+                        "", "", "", "", "", "", "", ""
+                    )
+                )
+                return
+                
+            # Add players to table
+            for player in squad['players']:
+                # Get player data
+                name = player.get('name', 'Unknown')
+                position = player.get('position', 'Unknown')
+                age = player.get('age', 'Unknown')
+                nationality = player.get('nationality', 'Unknown')
+                
+                # Add row with available data and placeholders for stats
+                # (API doesn't provide appearance/goals/cards data in squad endpoint)
+                self.squad_table.insert(
+                    "", "end",
+                    values=(
+                        name,
+                        position,
+                        age,
+                        nationality,
+                        "-",  # Appearances
+                        "-",  # Goals
+                        "-",  # Assists
+                        "-",  # Yellow Cards
+                        "-"   # Red Cards
+                    )
+                )
+            # Apply default sorting by player name (column 0)
+            if hasattr(self.squad_table, 'sorter'):
+                # Sort by player name alphabetically
+                self.squad_table.sorter.apply_initial_sort("0", reverse=False)
+                    
+        except Exception as e:
+            logger.error(f"Error updating squad table: {str(e)}")
+            
+            # Add an error message row
             self.squad_table.insert(
                 "", "end",
                 values=(
-                    f"Player {i+1}",
-                    position,
-                    20 + (i % 15),
-                    nationality,
-                    i + 10,
-                    i % 5,
-                    i % 3,
-                    i % 4,
-                    0 if i % 10 != 0 else 1
+                    f"Error fetching squad data: {str(e)}",
+                    "", "", "", "", "", "", "", ""
                 )
             )
     

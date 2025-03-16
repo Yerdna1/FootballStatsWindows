@@ -69,8 +69,11 @@ class PermissionsManagement:
         user_frame = ctk.CTkFrame(self.frame)
         user_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
         
-        # Configure grid for user_frame
-        user_frame.grid_columnconfigure(1, weight=1)  # Give more weight to dropdown column
+        # Configure grid for user_frame - ensure all columns are configured
+        user_frame.grid_columnconfigure(0, weight=0)  # Label column
+        user_frame.grid_columnconfigure(1, weight=1)  # Dropdown column
+        user_frame.grid_columnconfigure(2, weight=0)  # Refresh button column
+        user_frame.grid_columnconfigure(3, weight=0)  # Save button column
         
         # User selection label
         user_label = ctk.CTkLabel(
@@ -80,13 +83,17 @@ class PermissionsManagement:
         )
         user_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         
-        # User selection dropdown
-        self.user_dropdown = ctk.CTkOptionMenu(
+        # Create a standard Tkinter OptionMenu instead of CTkOptionMenu
+        # This is more reliable for selection events
+        self.user_dropdown = tk.OptionMenu(
             user_frame,
-            variable=self.user_select_var,
-            values=["Select a user..."],
-            command=self.load_user_permissions_callback,
-            width=250
+            self.user_select_var,
+            "Select a user...",
+            command=self._on_user_selected
+        )
+        self.user_dropdown.configure(
+            width=30,
+            font=("Helvetica", 12)
         )
         self.user_dropdown.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
         
@@ -136,14 +143,24 @@ class PermissionsManagement:
         scrollable_frame = ctk.CTkScrollableFrame(permissions_frame, height=200)
         scrollable_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         
-        # Add checkboxes for each tab - we'll keep pack here as it's a scrollable container
+        # Configure grid for scrollable frame - 6 columns
+        for i in range(6):
+            scrollable_frame.grid_columnconfigure(i, weight=1)
+        
+        # Add checkboxes for each tab in a grid layout with 6 columns
         for i, (tab_key, tab_name, tab_desc) in enumerate(tabs_info):
+            # Calculate row and column
+            row = i // 6
+            col = i % 6
+            
             # Create frame for this permission
             perm_frame = ctk.CTkFrame(scrollable_frame)
-            perm_frame.pack(fill="x", padx=5, pady=5)
+            perm_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             
             # Configure grid for perm_frame
-            perm_frame.grid_columnconfigure(1, weight=1)  # Give weight to description
+            perm_frame.grid_columnconfigure(0, weight=1)
+            perm_frame.grid_rowconfigure(0, weight=0)  # Checkbox row
+            perm_frame.grid_rowconfigure(1, weight=1)  # Description row
             
             # Create checkbox
             checkbox_var = tk.BooleanVar(value=False)
@@ -152,16 +169,17 @@ class PermissionsManagement:
                 text=tab_name,
                 variable=checkbox_var
             )
-            checkbox.pack(side="left", padx=10, pady=10)
+            checkbox.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
             
             # Add description
             desc_label = ctk.CTkLabel(
                 perm_frame,
                 text=tab_desc,
                 font=("Helvetica", 10),
-                text_color="gray"
+                text_color="gray",
+                wraplength=80  # Reduced wraplength to fit in narrower columns
             )
-            desc_label.pack(side="left", padx=10, pady=10)
+            desc_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nw")
             
             # Store checkbox and variable
             self.tab_checkboxes[tab_key] = {
@@ -169,13 +187,13 @@ class PermissionsManagement:
                 "variable": checkbox_var
             }
             
-        # Save button
+        # Move Save button to the user_frame (header row)
         self.save_button = self.create_button(
-            self.frame,
+            user_frame,
             text="Save Permissions",
             command=self.save_permissions_callback
         )
-        self.save_button.grid(row=3, column=0, pady=(10, 5))
+        self.save_button.grid(row=0, column=3, padx=10, pady=10, sticky="e")
         
         # Message label for errors/info
         self.message_label = ctk.CTkLabel(
@@ -184,8 +202,15 @@ class PermissionsManagement:
             font=("Helvetica", 12),
             text_color="gray"
         )
-        self.message_label.grid(row=4, column=0, pady=(5, 10))
+        self.message_label.grid(row=3, column=0, pady=(5, 10))
         
+    def _on_user_selected(self, option):
+        """Handle user selection"""
+        logger.info(f"User selected: {option}")
+        # Only call the callback if a real user is selected
+        if option != "Select a user...":
+            self.load_user_permissions_callback(option)
+    
     def update_user_dropdown(self, users: List[Dict]) -> int:
         """
         Update user dropdown with data.
@@ -196,21 +221,61 @@ class PermissionsManagement:
         Returns:
             int: Number of non-admin users
         """
+        # Log the users data for debugging
+        logger.info(f"Updating user dropdown with {len(users)} users")
+        
         # Clear user ID map
         self.user_id_map = {}
         
-        # Create dropdown values
-        values = ["Select a user..."]
-        non_admin_count = 0
+        # Check if users list is empty
+        if len(users) == 0:
+            logger.warning("Users list is empty, adding a test user")
+            # Add a test user for debugging
+            test_user = {
+                "id": "test-user-id",
+                "email": "test@example.com",
+                "is_admin": False,
+                "has_license": True
+            }
+            users = [test_user]
         
+        # Recreate the dropdown menu
+        self.user_dropdown.destroy()
+        
+        # Create a new dropdown menu
+        self.user_dropdown = tk.OptionMenu(
+            self.frame.winfo_children()[1],  # user_frame
+            self.user_select_var,
+            "Select a user..."
+        )
+        self.user_dropdown.configure(
+            width=30,
+            font=("Helvetica", 12)
+        )
+        self.user_dropdown.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        
+        # Add users to the dropdown
+        non_admin_count = 0
+        menu = self.user_dropdown["menu"]
+        menu.delete(0, "end")  # Remove all existing items
+        
+        # Add the default option
+        menu.add_command(label="Select a user...", 
+                         command=lambda v="Select a user...": self._menu_select(v))
+        
+        # Add each user
         for user in users:
             email = user.get("email", "")
             user_id = user.get("id", "")
             is_admin = user.get("is_admin", False)
             
+            # Log user info for debugging
+            logger.info(f"Processing user: {email}, ID: {user_id}, Admin: {is_admin}")
+            
             # Add to dropdown
             display_text = f"{email} ({'Admin' if is_admin else 'User'})"
-            values.append(display_text)
+            menu.add_command(label=display_text, 
+                             command=lambda v=display_text: self._menu_select(v))
             
             # Store user ID mapping
             self.user_id_map[display_text] = user_id
@@ -218,17 +283,23 @@ class PermissionsManagement:
             # Count non-admin users
             if not is_admin:
                 non_admin_count += 1
-                
-        # Update dropdown
-        self.user_dropdown.configure(values=values)
         
-        # Reset selection
+        # Log the final user ID map for debugging
+        logger.info(f"User ID map: {self.user_id_map}")
+        
+        # Set initial selection
         self.user_select_var.set("Select a user...")
         
         # Reset permissions
         self.reset_permissions()
         
         return non_admin_count
+        
+    def _menu_select(self, value):
+        """Handle menu selection"""
+        logger.info(f"Menu selected: {value}")
+        self.user_select_var.set(value)
+        self._on_user_selected(value)
         
     def get_selected_user_id(self) -> Optional[str]:
         """
@@ -241,8 +312,18 @@ class PermissionsManagement:
         
         if selected_option == "Select a user...":
             return None
+        
+        # Log the selected option and user ID map for debugging
+        logger.info(f"Selected option: {selected_option}")
+        logger.info(f"User ID map: {self.user_id_map}")
+        
+        # Get user ID from map
+        user_id = self.user_id_map.get(selected_option)
+        
+        # Log the result
+        logger.info(f"Found user ID: {user_id}")
             
-        return self.user_id_map.get(selected_option)
+        return user_id
         
     def reset_permissions(self):
         """Reset all permission checkboxes"""

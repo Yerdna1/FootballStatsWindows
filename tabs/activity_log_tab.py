@@ -110,7 +110,7 @@ class ActivityLogTab(BaseTab):
         self.refresh_button.grid(row=0, column=4, padx=20, pady=10, sticky="e")
         
         # Create activities table
-        self.activities_table = self._create_table(
+        table_container, self.activities_table = self._create_sortable_table(
             self.content_frame,
             columns=[
                 {"text": "Time", "width": 150},
@@ -120,7 +120,7 @@ class ActivityLogTab(BaseTab):
             ],
             height=20
         )
-        self.activities_table.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
+        table_container.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
         
         # Configure grid for footer_frame
         self.footer_frame.grid_columnconfigure(0, weight=1)

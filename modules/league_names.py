@@ -24,7 +24,7 @@ LEAGUE_NAMES = {
     103: {"name": "Eliteserien", "flag": "🇳🇴", "country": "Norway"},
     106: {"name": "Ekstraklasa", "flag": "🇵🇱", "country": "Poland"},
     345: {"name": "Czech First League", "flag": "🇨🇿", "country": "Czech Republic"},
-    128: {"name": "Austrian Bundesliga", "flag": "🇦🇹", "country": "Austria"},
+    218: {"name": "Austrian Bundesliga", "flag": "🇦🇹", "country": "Austria"},
     332: {"name": "Slovakian Super Liga", "flag": "🇸🇰", "country": "Slovakia"},
     271: {"name": "Nemzeti Bajnokság I", "flag": "🇭🇺", "country": "Hungary"},
     
@@ -40,7 +40,7 @@ LEAGUE_NAMES = {
     128: {"name": "Primera División", "flag": "🇦🇷", "country": "Argentina"},
     239: {"name": "Primera División", "flag": "🇺🇾", "country": "Uruguay"},
     350: {"name": "Primera División", "flag": "🇨🇱", "country": "Chile"},
-    239: {"name": "Primera División", "flag": "🇵🇾", "country": "Paraguay"},
+    240: {"name": "Primera División", "flag": "🇵🇾", "country": "Paraguay"},
     
     # North American Leagues
     253: {"name": "MLS", "flag": "🇺🇸", "country": "USA"},

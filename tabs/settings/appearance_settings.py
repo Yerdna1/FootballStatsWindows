@@ -59,6 +59,24 @@ class AppearanceSettings(BaseSettingsSection):
             )
             mode_radio.pack(anchor="w", padx=20, pady=8)
         
+        # Add Apply button for appearance mode
+        appearance_controls_frame = ctk.CTkFrame(self.appearance_mode_frame, fg_color="transparent")
+        appearance_controls_frame.pack(fill="x", padx=10, pady=10)
+        
+        self.apply_appearance_button = ctk.CTkButton(
+            appearance_controls_frame,
+            text="Apply",
+            command=self._apply_appearance_mode,
+            width=100,
+            height=30,
+            corner_radius=8,
+            border_width=0,
+            fg_color=self.theme["accent"],
+            hover_color=self.theme["primary"],
+            text_color="white"
+        )
+        self.apply_appearance_button.pack(side="right", padx=10)
+        
         # Font Size (Right column)
         self.font_size_frame = ctk.CTkFrame(self.frame)
         self.font_size_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
@@ -171,8 +189,99 @@ class AppearanceSettings(BaseSettingsSection):
             if col > 1:
                 col = 0
                 row += 1
+        
+        # Add Apply button for color theme
+        theme_controls_frame = ctk.CTkFrame(self.color_theme_frame, fg_color="transparent")
+        theme_controls_frame.pack(fill="x", padx=10, pady=10)
+        
+        self.apply_theme_button = ctk.CTkButton(
+            theme_controls_frame,
+            text="Apply",
+            command=self._apply_color_theme,
+            width=100,
+            height=30,
+            corner_radius=8,
+            border_width=0,
+            fg_color=self.theme["accent"],
+            hover_color=self.theme["primary"],
+            text_color="white"
+        )
+        self.apply_theme_button.pack(side="right", padx=10)
                 
         return self.frame
+    
+    def _apply_appearance_mode(self):
+        """Apply appearance mode setting without saving other settings"""
+        try:
+            # Get the current appearance mode
+            appearance_mode = self.appearance_mode_var.get()
+            
+            # Save only the appearance mode setting
+            self.settings_manager.set_setting("appearance_mode", appearance_mode)
+            
+            # Apply appearance mode
+            ctk.set_appearance_mode(appearance_mode)
+            
+            # Call the callback to update all tabs
+            self.on_settings_changed()
+            
+            # Show success message
+            self.show_status_message(f"Appearance mode updated to {appearance_mode}")
+            
+        except Exception as e:
+            logger.error(f"Error applying appearance mode: {str(e)}")
+            self.show_status_message(f"Error: {str(e)}")
+    
+    def _get_ctk_theme(self, color_theme):
+        """Map custom theme names to standard CustomTkinter themes"""
+        # CustomTkinter only supports built-in themes: "blue", "green", and "dark-blue"
+        # We need to map our custom themes to these standard themes
+        
+        # These are the built-in themes that come with CustomTkinter
+        BUILT_IN_THEMES = ["blue", "green", "dark-blue"]
+        
+        # If the theme is already a built-in theme, use it directly
+        if color_theme in BUILT_IN_THEMES:
+            return color_theme
+            
+        # Otherwise, map to a built-in theme
+        if color_theme == "dark":
+            return "dark-blue"
+        elif color_theme == "red" or color_theme == "purple":
+            return "blue"  # Map red and purple to blue (default)
+        else:
+            return "blue"  # Default fallback for any other theme
+    
+    def _apply_color_theme(self):
+        """Apply color theme setting without saving other settings"""
+        try:
+            # Get the current color theme
+            color_theme = self.color_theme_var.get()
+            
+            # Save only the color theme setting
+            self.settings_manager.set_setting("color_theme", color_theme)
+            
+            # Apply color theme - use only standard themes for CustomTkinter
+            ctk_theme = self._get_ctk_theme(color_theme)
+                
+            # Set the CustomTkinter theme using the built-in theme name
+            # This avoids trying to load a theme file directly
+            try:
+                ctk.set_default_color_theme(ctk_theme)
+            except Exception as theme_error:
+                logger.warning(f"Could not set CTk theme directly: {str(theme_error)}")
+                # Fallback to blue theme which is guaranteed to exist
+                ctk.set_default_color_theme("blue")
+            
+            # Call the callback to update all tabs
+            self.on_settings_changed()
+            
+            # Show success message
+            self.show_status_message(f"Color theme updated to {color_theme}")
+            
+        except Exception as e:
+            logger.error(f"Error applying color theme: {str(e)}")
+            self.show_status_message(f"Error: {str(e)}")
     
     def _apply_font_size(self):
         """Apply font size setting without saving other settings"""
@@ -202,6 +311,19 @@ class AppearanceSettings(BaseSettingsSection):
             
             # Apply appearance settings
             ctk.set_appearance_mode(self.appearance_mode_var.get())
+            
+            # Apply color theme - use only standard themes for CustomTkinter
+            color_theme = self.color_theme_var.get()
+            ctk_theme = self._get_ctk_theme(color_theme)
+                
+            # Set the CustomTkinter theme using the built-in theme name
+            # This avoids trying to load a theme file directly
+            try:
+                ctk.set_default_color_theme(ctk_theme)
+            except Exception as theme_error:
+                logger.warning(f"Could not set CTk theme directly: {str(theme_error)}")
+                # Fallback to blue theme which is guaranteed to exist
+                ctk.set_default_color_theme("blue")
             
             return True
         except Exception as e:
