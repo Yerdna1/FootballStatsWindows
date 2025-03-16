@@ -33,13 +33,25 @@ class TableUtils:
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
         
-        # Apply font size if settings manager is provided
+        # Default font size if settings_manager is None or get_font_size() fails
+        DEFAULT_FONT_SIZE = 30
+        
+        # Apply font size with fallback
+        font_size = DEFAULT_FONT_SIZE
         if settings_manager:
-            font_size = settings_manager.get_font_size()
-            style = ttk.Style()
-            style.configure("Treeview", font=('Helvetica', font_size))
-            style.configure("Treeview.Heading", font=('Helvetica', font_size + 2, 'bold'))
-            style.configure("Treeview", rowheight=max(30, int(font_size * 1.2)))
+            try:
+                # Get font size from settings with fallback
+                font_size = settings_manager.get_font_size()
+                if font_size is None or not isinstance(font_size, int) or font_size <= 0:
+                    font_size = DEFAULT_FONT_SIZE
+            except Exception as e:
+                logger.warning(f"Error getting font size from settings: {str(e)}")
+        
+        # Apply font styling
+        style = ttk.Style()
+        style.configure("Treeview", font=('Helvetica', font_size))
+        style.configure("Treeview.Heading", font=('Helvetica', font_size + 2, 'bold'))
+        style.configure("Treeview", rowheight=max(30, int(font_size * 1.2)))
         
         # Create the table
         table = ttk.Treeview(frame, columns=columns, show="headings", height=height)
@@ -61,7 +73,7 @@ class TableUtils:
         table.container_frame = frame
         
         return table
-    
+        
     @staticmethod    
     def create_legacy_table(parent, columns, height=400, settings_manager=None) -> ttk.Treeview:
         """

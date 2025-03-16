@@ -74,6 +74,10 @@ class FootballStatsApp(ctk.CTk):
         # Initialize settings manager
         self.settings_manager = SettingsManager()
         
+        # Set up global styles
+        self._setup_global_styles()
+    
+        
         # Set language from settings
         language = self.settings_manager.get_language()
         set_language(language)
@@ -160,7 +164,27 @@ class FootballStatsApp(ctk.CTk):
         # Create status bar
         self.status_bar = ctk.CTkLabel(self, text=translate("Ready"), anchor="w", font=ctk.CTkFont(size=14))
         self.status_bar.pack(fill="x", padx=10, pady=(0, 10))
-        
+    
+    def _setup_global_styles(self):
+        """Set up global styles for the application"""
+        try:
+            # Get font size from settings
+            font_size = self.settings_manager.get_font_size()
+            if font_size is None or not isinstance(font_size, int) or font_size <= 0:
+                font_size = 40  # Default fallback
+                
+            # Configure notebook style for larger font
+            style = ttk.Style()
+            
+            # Configure Treeview (table) styles
+            style.configure("Treeview", font=('Helvetica', font_size))
+            style.configure("Treeview.Heading", font=('Helvetica', font_size + 2, 'bold'))
+            style.configure("Treeview", rowheight=max(30, int(font_size * 1.2)))
+            
+            logger.info(f"Applied global font size: {font_size}")
+        except Exception as e:
+            logger.error(f"Error setting up global styles: {str(e)}")
+            
     def _init_firebase_login(self):
         """Initialize Firebase login after the application has started"""
         try:

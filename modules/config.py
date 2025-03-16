@@ -72,7 +72,7 @@ DEFAULT_SETTINGS = {
     "leagues": [39],  # Premier League
     "prediction_threshold_level1": PREDICTION_THRESHOLD_LEVEL1,
     "prediction_threshold_level2": PREDICTION_THRESHOLD_LEVEL2,
-    "font_size": 50,  # Default font size for tables and detail windows
+    "font_size": 30,  # Default font size for tables and detail windows
     "language": "sk",  # Default language (Slovak)
     
     # Firebase settings
