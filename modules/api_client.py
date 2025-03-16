@@ -91,7 +91,7 @@ class FootballAPI:
                 
         return results
     
-    def fetch_all_teams(self, league_names, matches_count=3):
+    def fetch_all_teams(self, league_names, matches_count=5):
         """
         Fetch all teams across all leagues with form analysis
         
