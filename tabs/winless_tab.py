@@ -140,7 +140,7 @@ class WinlessTab(BaseTab):
         table_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         # Initial data load
-        self._refresh_data()
+        #self._refresh_data()
         
     def _on_league_changed(self, selection):
         """Handle league selection change"""

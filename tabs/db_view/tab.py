@@ -34,7 +34,7 @@ class DbViewTab(BaseTab):
         self.show_footer()
         
         # Load initial data
-        self._load_data()
+        #self._load_data()
     
     def _create_ui(self):
         """Create the database view tab UI elements"""

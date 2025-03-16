@@ -152,7 +152,7 @@ class NextRoundTab(BaseTab):
         self.fixtures_table.bind("<<TreeviewSelect>>", self._on_fixture_selected)
         
         # Initial data load
-        self._refresh_data()
+        #self._refresh_data()
         
     def _on_league_changed(self, selection):
         """Handle league selection change"""

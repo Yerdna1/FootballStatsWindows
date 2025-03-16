@@ -91,7 +91,7 @@ class FormTab(BaseTab):
         )
         
         # Initial data load
-        self._refresh_data()
+        #self._refresh_data()
     
     def _get_league_options(self):
         """Get league options from the league_names module"""

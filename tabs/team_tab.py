@@ -217,7 +217,7 @@ class TeamTab(BaseTab):
 
         
         # Initial data load
-        self._refresh_data()
+        #self._refresh_data()
         
     def _create_stat_label(self, parent, title, value, row, col):
         """Create a stat label with title and value"""

@@ -22,7 +22,7 @@ class StatsTab:
         self._create_ui()
         
         # Load initial data
-        self._load_data()
+        #self._load_data()
         
     def _create_ui(self):
         """Create the stats tab UI elements"""

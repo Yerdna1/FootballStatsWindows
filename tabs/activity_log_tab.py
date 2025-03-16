@@ -46,7 +46,7 @@ class ActivityLogTab(BaseTab):
         self.show_footer()
         
         # Load activities
-        self._load_activities()
+        #self._load_activities()
         
     def _create_ui(self):
         """Create the activity log tab UI elements"""
