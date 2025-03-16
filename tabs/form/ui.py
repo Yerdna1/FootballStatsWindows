@@ -26,7 +26,7 @@ class FormUI:
         controls_frame = ctk.CTkFrame(content_frame)
         controls_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
         
-        # Configure grid for controls_frame - ensure all columns are configured
+        # Configure grid for controls_frame
         controls_frame.grid_columnconfigure(0, weight=1)  # League frame
         controls_frame.grid_columnconfigure(1, weight=1)  # Form length frame
         controls_frame.grid_columnconfigure(2, weight=0)  # Refresh button
@@ -63,12 +63,6 @@ class FormUI:
         )
         save_button.grid(row=0, column=3, padx=5, pady=10)
         
-        # Configure grid for controls_frame to include the new button
-        controls_frame.grid_columnconfigure(0, weight=1)  # League frame
-        controls_frame.grid_columnconfigure(1, weight=1)  # Form length frame
-        controls_frame.grid_columnconfigure(2, weight=0)  # Refresh button
-        controls_frame.grid_columnconfigure(3, weight=0)  # Save button
-        
         # Create notebook for tables
         notebook = ttk.Notebook(content_frame)
         notebook.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
@@ -80,6 +74,11 @@ class FormUI:
         
         # Upcoming Fixtures Tab
         fixtures_frame, fixtures_table = self._create_fixtures_tab(
+            notebook, create_table_func
+        )
+        
+        # Detailed Upcoming Matches Tab
+        upcoming_matches_frame, upcoming_matches_table = self._create_upcoming_matches_tab(
             notebook, create_table_func
         )
         
@@ -96,6 +95,8 @@ class FormUI:
             "form_analysis_table": form_analysis_table,
             "fixtures_frame": fixtures_frame,
             "fixtures_table": fixtures_table,
+            "upcoming_matches_frame": upcoming_matches_frame,
+            "upcoming_matches_table": upcoming_matches_table,
             "save_button": save_button
         }
     
@@ -143,7 +144,7 @@ class FormUI:
         )
         form_length_label.grid(row=0, column=0, pady=(0, 5))
         
-        # Create dropdown for data types
+        # Create segmented button for form length
         form_length_segment = ctk.CTkSegmentedButton(
             form_length_frame,
             values=["3 Matches", "5 Matches"],
@@ -164,20 +165,23 @@ class FormUI:
         form_analysis_frame.grid_columnconfigure(0, weight=1)
         form_analysis_frame.grid_rowconfigure(0, weight=1)
         
+        # Detailed column definitions with sorting types
+        columns = [
+            {"text": "Team", "width": 150, "type": "string"},
+            {"text": "League", "width": 150, "type": "string"},
+            {"text": "Position", "width": 80, "type": "numeric"},
+            {"text": "Points", "width": 80, "type": "numeric"},
+            {"text": "PPG", "width": 80, "type": "numeric"},
+            {"text": "Form", "width": 100, "type": "string"},
+            {"text": "Form Points", "width": 100, "type": "numeric"},
+            {"text": "Form PPG", "width": 80, "type": "numeric"},
+            {"text": "Perf. Diff", "width": 80, "type": "numeric"}
+        ]
+        
         # Create form analysis table with sortable functionality
         table_container, form_analysis_table = create_table_func(
             form_analysis_frame,
-            columns=[
-                {"text": "Team", "width": 150},
-                {"text": "League", "width": 150},
-                {"text": "Position", "width": 80},
-                {"text": "Points", "width": 80},
-                {"text": "PPG", "width": 80},
-                {"text": "Form", "width": 100},
-                {"text": "Form Points", "width": 100},
-                {"text": "Form PPG", "width": 80},
-                {"text": "Perf. Diff", "width": 80}
-            ]
+            columns=columns
         )
         table_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
@@ -192,19 +196,22 @@ class FormUI:
         fixtures_frame.grid_columnconfigure(0, weight=1)
         fixtures_frame.grid_rowconfigure(0, weight=1)
         
+        # Detailed column definitions with sorting types
+        columns = [
+            {"text": "Team", "width": 150, "type": "string"},
+            {"text": "Perf. Diff", "width": 80, "type": "numeric"},
+            {"text": "Prediction", "width": 150, "type": "string"},
+            {"text": "Opponent", "width": 150, "type": "string"},
+            {"text": "Date", "width": 100, "type": "date"},
+            {"text": "Time", "width": 80, "type": "string"},
+            {"text": "Venue", "width": 150, "type": "string"},
+            {"text": "Status", "width": 100, "type": "string"}
+        ]
+        
         # Create upcoming fixtures table with sortable functionality
         table_container, fixtures_table = create_table_func(
             fixtures_frame,
-            columns=[
-                {"text": "Team", "width": 150},
-                {"text": "Perf. Diff", "width": 80},
-                {"text": "Prediction", "width": 150},
-                {"text": "Opponent", "width": 150},
-                {"text": "Date", "width": 100},
-                {"text": "Time", "width": 80},
-                {"text": "Venue", "width": 150},
-                {"text": "Status", "width": 100}
-            ]
+            columns=columns
         )
         table_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
@@ -219,19 +226,22 @@ class FormUI:
         upcoming_matches_frame.grid_columnconfigure(0, weight=1)
         upcoming_matches_frame.grid_rowconfigure(0, weight=1)
         
+        # Detailed column definitions with sorting types
+        columns = [
+            {"text": "Team", "width": 150, "type": "string"},
+            {"text": "Opponent", "width": 150, "type": "string"},
+            {"text": "League", "width": 150, "type": "string"},
+            {"text": "Date", "width": 100, "type": "date"},
+            {"text": "Time", "width": 80, "type": "string"},
+            {"text": "Venue", "width": 150, "type": "string"},
+            {"text": "Round", "width": 100, "type": "string"},
+            {"text": "Status", "width": 100, "type": "string"}
+        ]
+        
         # Create upcoming matches table with sortable functionality
         table_container, upcoming_matches_table = create_table_func(
             upcoming_matches_frame,
-            columns=[
-                {"text": "Team", "width": 150},
-                {"text": "Opponent", "width": 150},
-                {"text": "League", "width": 150},
-                {"text": "Date", "width": 100},
-                {"text": "Time", "width": 80},
-                {"text": "Venue", "width": 150},
-                {"text": "Round", "width": 100},
-                {"text": "Status", "width": 100}
-            ]
+            columns=columns
         )
         table_container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         

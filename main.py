@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import sqlite3
+import sys
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
@@ -32,9 +33,22 @@ from tabs.about_tab import AboutTab
 from tabs.logs_tab import LogsTab
 from tabs.activity_log_tab import ActivityLogTab
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Configure root logger
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # This will output to the console
+    ]
+)
+
+# Create logger for this module
 logger = logging.getLogger(__name__)
+
+# Set logging for specific modules
+logging.getLogger('tabs.form').setLevel(logging.DEBUG)
+logging.getLogger('modules.api_client').setLevel(logging.DEBUG)
+logging.getLogger('modules.form_analyzer').setLevel(logging.DEBUG)
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
@@ -88,7 +102,7 @@ class FootballStatsApp(ctk.CTk):
         
         # Configure notebook style for larger font
         style = ttk.Style()
-        style.configure("TNotebook.Tab", font=('Helvetica', 36))  # Increased font size from 28 to 36
+        style.configure("TNotebook.Tab", font=('Helvetica', 18))  # Increased font size from 28 to 36
         style.configure("TNotebook", font=('Helvetica', 36))  # Add font configuration for the notebook itself
         
         # Create tabview (initially hidden)

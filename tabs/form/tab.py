@@ -54,7 +54,7 @@ class FormTab(BaseTab):
             self.content_frame,
             self._create_title,
             self._create_button,
-            self._create_table,
+            self._create_sortable_table,
             self.selected_league,
             self.form_length,
             self._on_league_changed,

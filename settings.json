@@ -1,12 +1,12 @@
 {
     "appearance_mode": "Dark",
     "color_theme": "green",
-    "form_length": 5,
+    "form_length": 3,
     "threshold": 0.75,
     "auto_refresh": false,
     "refresh_interval": 30,
     "leagues": [
-        39
+        345
     ],
     "prediction_threshold_level1": 0.75,
     "prediction_threshold_level2": 1.05,
