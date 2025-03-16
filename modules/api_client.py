@@ -106,176 +106,109 @@ class FootballAPI:
         all_teams = []
 
         try:
-            # Process ALL_LEAGUES case
-            if league_names.get(ALL_LEAGUES):
-                standings = self.fetch_standings(ALL_LEAGUES)
+            # Process each league individually
+            for league_id, league_info in league_names.items():
+                # Skip ALL_LEAGUES value if somehow passed directly
+                if league_id == ALL_LEAGUES:
+                    logger.warning("ALL_LEAGUES value passed directly, skipping")
+                    continue
+                    
+                # Make sure we're working with a valid integer ID
+                if not isinstance(league_id, int):
+                    logger.warning(f"Invalid league ID type: {type(league_id)}")
+                    continue
+                    
+                logger.info(f"Processing league: {league_id} ({league_info.get('name', 'Unknown')})")
+                
+                # Fetch standings for this specific league
+                standings = self.fetch_standings(league_id)
                 
                 if not standings:
-                    logger.warning("No standings available for ALL_LEAGUES")
-                    return []
+                    logger.warning(f"No standings available for league {league_id}")
+                    continue
+                    
+                # Check if we got a response
+                if not standings.get('response') or len(standings['response']) == 0:
+                    logger.warning(f"No response data for league {league_id}")
+                    continue
+                    
+                # Get league data
+                league_data = standings['response'][0].get('league', {})
+                if not league_data:
+                    logger.warning(f"No league data for league {league_id}")
+                    continue
+                    
+                # Get standings data
+                all_standings = league_data.get('standings', [])
+                if not all_standings:
+                    logger.warning(f"No standings data for league {league_id}")
+                    continue
+                    
+                # Use the first standings group (usually the main one)
+                standings_data = all_standings[0] if all_standings else []
+                
+                if not standings_data:
+                    logger.warning(f"Empty standings data for league {league_id}")
+                    continue
+                
+                # Get fixtures with caching
+                fixtures = self.fetch_fixtures(league_id)
+                logger.info(f"Fetched {len(fixtures)} fixtures for league {league_id}")
 
-                # Process each league
-                for league_id, league_standings in standings.items():
-                    league_info = LEAGUE_NAMES.get(int(league_id), {})
-                    if not league_info:
-                        logger.warning(f"No information for league {league_id}")
-                        continue
-
+                # Process each team
+                league_teams = []
+                for team in standings_data:
                     try:
-                        # Get standings data safely
-                        response = league_standings.get('response', [{}])[0]
-                        league_data = response.get('league', {})
-                        
-                        # Some leagues might have multiple standings groups
-                        all_standings = league_data.get('standings', [])
-                        if not all_standings:
-                            logger.warning(f"No standings data for league {league_id}")
+                        team_data = team.get('team', {})
+                        team_id = team_data.get('id')
+                        if not team_id:
                             continue
+
+                        team_name = team_data.get('name', 'Unknown')
+                        matches_played = team.get('all', {}).get('played', 0)
+                        
+                        if matches_played == 0:
+                            continue
+
+                        actual_points = team.get('points', 0)
+                        current_ppg = actual_points / matches_played if matches_played > 0 else 0
+
+                        # Analyze team form
+                        form_data = FormAnalyzer.analyze_team_form(fixtures, team_id, matches_count)
+                        
+                        form_points = form_data['points']
+                        form_matches = form_data['matches_analyzed']
+                        form_ppg = form_points / matches_count if form_matches > 0 else 0
+                        form_vs_actual_diff = form_ppg - current_ppg
+                        
+                        # Include team info
+                        performance_diff = round(form_vs_actual_diff, 2)
+                        if abs(performance_diff) > PERF_DIFF_THRESHOLD:  # Filter teams here
+                            team_info = {
+                                'team_id': team_id,
+                                'team': team_name,
+                                'league': f"{league_info.get('flag', '')} {league_info.get('name', '')}",
+                                'league_id': league_id,  # Add league_id explicitly
+                                'current_position': team.get('rank', 0),
+                                'matches_played': matches_played,
+                                'current_points': actual_points,
+                                'current_ppg': round(current_ppg, 2),
+                                'form': ' '.join(form_data['form']),
+                                'form_points': form_points,
+                                'form_ppg': round(form_ppg, 2),
+                                'performance_diff': round(form_vs_actual_diff, 2),
+                                'goals_for': form_data['goals_for'],
+                                'goals_against': form_data['goals_against']
+                            }
                             
-                        # Use the first standings group (usually the main one)
-                        standings_data = all_standings[0] if all_standings else []
-                        
-                        if not standings_data:
-                            logger.warning(f"Empty standings data for league {league_id}")
-                            continue
-                        
-                        # Get fixtures with caching
-                        fixtures = self.fetch_fixtures(league_id)
-
-                        # Process each team
-                        for team in standings_data:
-                            try:
-                                team_data = team.get('team', {})
-                                team_id = team_data.get('id')
-                                if not team_id:
-                                    continue
-
-                                team_name = team_data.get('name', 'Unknown')
-                                matches_played = team.get('all', {}).get('played', 0)
-                                
-                                if matches_played == 0:
-                                    continue
-
-                                actual_points = team.get('points', 0)
-                                current_ppg = actual_points / matches_played if matches_played > 0 else 0
-
-                                # Analyze team form
-                                form_data = FormAnalyzer.analyze_team_form(fixtures, team_id, matches_count)
-                                
-                                form_points = form_data['points']
-                                form_matches = form_data['matches_analyzed']
-                                form_ppg = form_points / matches_count if form_matches > 0 else 0
-                                form_vs_actual_diff = form_ppg - current_ppg
-                                
-                                # Include team info
-                                performance_diff = round(form_vs_actual_diff, 2)
-                                if abs(performance_diff) > PERF_DIFF_THRESHOLD:  # Filter teams here
-                                    team_info = {
-                                        'team_id': team_id,
-                                        'team': team_name,
-                                        'league': f"{league_info.get('flag', '')} {league_info.get('name', '')}",
-                                        'current_position': team.get('rank', 0),
-                                        'matches_played': matches_played,
-                                        'current_points': actual_points,
-                                        'current_ppg': round(current_ppg, 2),
-                                        'form': ' '.join(form_data['form']),
-                                        'form_points': form_points,
-                                        'form_ppg': round(form_ppg, 2),
-                                        'performance_diff': round(form_vs_actual_diff, 2),
-                                        'goals_for': form_data['goals_for'],
-                                        'goals_against': form_data['goals_against']
-                                    }
-                                    
-                                    all_teams.append(team_info)
-
-                            except Exception as e:
-                                logger.error(f"Error processing team {team_data.get('name', 'Unknown')}: {str(e)}")
-                                continue
+                            league_teams.append(team_info)
 
                     except Exception as e:
-                        logger.error(f"Error processing league {league_id}: {str(e)}")
+                        logger.error(f"Error processing team {team_data.get('name', 'Unknown')}: {str(e)}")
                         continue
-
-            else:
-                # Process individual leagues
-                for league_id, league_info in league_names.items():
-                    if not isinstance(league_id, int):
-                        continue
-
-                    try:
-                        standings = self.fetch_standings(league_id)
-                        if not standings or not standings.get('response'):
-                            logger.warning(f"No standings for league {league_id}")
-                            continue
-
-                        # Get standings data safely with better error handling
-                        if not standings.get('response') or len(standings['response']) == 0:
-                            logger.warning(f"No response data for league {league_id}")
-                            continue
-                            
-                        league_data = standings['response'][0].get('league', {})
-                        if not league_data:
-                            logger.warning(f"No league data for league {league_id}")
-                            continue
-                            
-                        standings_data = league_data.get('standings', [[]])[0]
-                        if not standings_data:
-                            logger.warning(f"No standings data for league {league_id}")
-                            continue
-                        fixtures = self.fetch_fixtures(league_id)
-
-                        for team in standings_data:
-                            try:
-                                team_data = team.get('team', {})
-                                team_id = team_data.get('id')
-                                if not team_id:
-                                    continue
-
-                                team_name = team_data.get('name', 'Unknown')
-                                matches_played = team.get('all', {}).get('played', 0)
-                                
-                                if matches_played == 0:
-                                    continue
-
-                                actual_points = team.get('points', 0)
-                                current_ppg = actual_points / matches_played if matches_played > 0 else 0
-
-                                # Analyze team form
-                                form_data = FormAnalyzer.analyze_team_form(fixtures, team_id, matches_count)
-                                
-                                form_points = form_data['points']
-                                form_matches = form_data['matches_analyzed']
-                                form_ppg = form_points / matches_count if form_matches > 0 else 0
-                                form_vs_actual_diff = form_ppg - current_ppg
-                                 # Include team info
-                                performance_diff = round(form_vs_actual_diff, 2)
-                                if abs(performance_diff) > PERF_DIFF_THRESHOLD:  # Filter teams here
-
-                                    team_info = {
-                                        'team_id': team_id,
-                                        'team': team_name,
-                                        'league': f"{league_info.get('flag', '')} {league_info.get('name', '')}",
-                                        'current_position': team.get('rank', 0),
-                                        'matches_played': matches_played,
-                                        'current_points': actual_points,
-                                        'current_ppg': round(current_ppg, 2),
-                                        'form': ' '.join(form_data['form']),
-                                        'form_points': form_points,
-                                        'form_ppg': round(form_ppg, 2),
-                                        'performance_diff': round(form_vs_actual_diff, 2),
-                                        'goals_for': form_data['goals_for'],
-                                        'goals_against': form_data['goals_against']
-                                    }
-                                    
-                                    all_teams.append(team_info)
-
-                            except Exception as e:
-                                logger.error(f"Error processing team {team_data.get('name', 'Unknown')}: {str(e)}")
-                                continue
-
-                    except Exception as e:
-                        logger.error(f"Error processing league {league_id}: {str(e)}")
-                        continue
+                        
+                logger.info(f"Found {len(league_teams)} teams with significant performance difference in league {league_id}")
+                all_teams.extend(league_teams)
 
         except Exception as e:
             logger.error(f"Error in fetch_all_teams: {str(e)}")
@@ -286,6 +219,14 @@ class FootballAPI:
 
     def fetch_standings(self, league_id):
         """Optimized standings fetch with better caching"""
+        # Special handling for ALL_LEAGUES
+        if league_id == ALL_LEAGUES:
+            logger.warning("ALL_LEAGUES value received in fetch_standings, this should not be passed directly")
+            logger.info("Use individual league IDs instead of ALL_LEAGUES constant")
+            # Return empty result for ALL_LEAGUES
+            return {}
+            
+        # Normal case - handle a specific league ID
         cache_key = f'standings_{league_id}'
         cached_data = self._get_from_cache(cache_key, 'medium')  # Standings change less frequently
         if cached_data:
@@ -293,38 +234,15 @@ class FootballAPI:
             
         # If auto-fetch is disabled and no cache, return empty result
         if self.disable_auto_fetch:
-            return {} if league_id == ALL_LEAGUES else None
+            return None
 
         url = f"{self.base_url}/standings"
-        if league_id == ALL_LEAGUES:
-            # Batch request for all leagues
-            params_list = [
-                {"league": lid, "season": 2024}
-                for lid in LEAGUE_NAMES.keys()
-                if isinstance(lid, int) and lid != ALL_LEAGUES
-            ]
-            
-            # Log the leagues being requested
-            logger.info(f"Fetching standings for {len(params_list)} leagues")
-            
-            results = self._batch_request(url, params_list)
-            
-            all_standings = {}
-            for params_str, data in results.items():
-                params = json.loads(params_str)
-                league_id = int(params['league'])  # Ensure league_id is an integer
-                all_standings[league_id] = data
-                logger.info(f"Received standings for league {league_id}")
-                
-            self._set_cache(cache_key, all_standings, 'medium')
-            return all_standings
-        else:
-            params = {"league": league_id, "season": 2024}
-            results = self._batch_request(url, [params])
-            data = results.get(json.dumps(params))
-            if data:
-                self._set_cache(cache_key, data, 'medium')
-                return data
+        params = {"league": league_id, "season": 2024}
+        results = self._batch_request(url, [params])
+        data = results.get(json.dumps(params))
+        if data:
+            self._set_cache(cache_key, data, 'medium')
+            return data
         return None
 
     def fetch_fixtures(self, league_id, season='2024', team_id=None, fixture_id=None):

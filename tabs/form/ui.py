@@ -183,6 +183,7 @@ class FormUI:
             {"text": "Opp. League", "width": 150, "type": "string"},
             {"text": "Opp. Position", "width": 80, "type": "numeric"},
             {"text": "Opp. Points", "width": 80, "type": "numeric"},
+            {"text": "Opp. PPG", "width": 50, "type": "numeric"},  # Added this column
             {"text": "Match Difficulty", "width": 120, "type": "string"},
             {"text": "Home/Away", "width": 100, "type": "string"},
             {"text": "Venue", "width": 150, "type": "string"},
