@@ -170,13 +170,23 @@ class FormUI:
         columns = [
             {"text": "Team", "width": 150, "type": "string"},
             {"text": "League", "width": 150, "type": "string"},
-            {"text": "Position", "width": 80, "type": "numeric"},
-            {"text": "Points", "width": 80, "type": "numeric"},
-            {"text": "PPG", "width": 80, "type": "numeric"},
+            {"text": "Position", "width": 40, "type": "numeric"},
+            {"text": "Points", "width": 40, "type": "numeric"},
+            {"text": "PPG", "width": 40, "type": "numeric"},
             {"text": "Form", "width": 100, "type": "string"},
-            {"text": "Form Points", "width": 100, "type": "numeric"},
-            {"text": "Form PPG", "width": 80, "type": "numeric"},
-            {"text": "Perf. Diff", "width": 80, "type": "numeric"}
+            {"text": "Form Points", "width": 60, "type": "numeric"},
+            {"text": "Form PPG", "width": 40, "type": "numeric"},
+            {"text": "Perf. Diff", "width": 50, "type": "numeric"},
+            {"text": "Next Match", "width": 100, "type": "date"},
+            {"text": "Next Opponent", "width": 150, "type": "string"},
+            {"text": "Opp. Perf. Diff", "width": 100, "type": "numeric"},
+            {"text": "Opp. League", "width": 150, "type": "string"},
+            {"text": "Opp. Position", "width": 80, "type": "numeric"},
+            {"text": "Opp. Points", "width": 80, "type": "numeric"},
+            {"text": "Match Difficulty", "width": 120, "type": "string"},
+            {"text": "Home/Away", "width": 100, "type": "string"},
+            {"text": "Venue", "width": 150, "type": "string"},
+            {"text": "Match Time", "width": 100, "type": "string"}
         ]
         
         # Create form analysis table with sortable functionality

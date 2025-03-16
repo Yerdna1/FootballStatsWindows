@@ -1,5 +1,8 @@
 # Football Stats
 
+.\venv\Scripts\Activate.ps1
+python main.py       
+
 A desktop application for analyzing football statistics, tracking team performance, and making predictions based on form analysis.
 
 ## Features

@@ -10,7 +10,7 @@
     ],
     "prediction_threshold_level1": 0.75,
     "prediction_threshold_level2": 1.05,
-    "font_size": 30,
+    "font_size": 33,
     "language": "sk",
     "firebase_config": {
         "apiKey": "",
