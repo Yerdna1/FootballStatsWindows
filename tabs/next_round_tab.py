@@ -4,11 +4,12 @@ from tkinter import ttk
 import logging
 from typing import Dict, List, Any, Optional, Callable
 
-from tabs.base_tab import BaseTab
+
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.league_names import get_league_options, get_league_display_name
+from tabs.base_tab.base_tab import BaseTab
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,8 @@ class NextRoundTab(BaseTab):
         self.controls_frame.grid_columnconfigure(1, weight=0)  # refresh button column
         
         # League selection
-        self.league_frame = ctk.CTkFrame(self.controls_frame)
-        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.league_frame = ctk.CTkFrame(self.controls_frame,width=400)
+        self.league_frame.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         
         # Configure grid for league_frame
         self.league_frame.grid_columnconfigure(0, weight=1)
@@ -129,7 +130,7 @@ class NextRoundTab(BaseTab):
         
         # Configure grid for details_frame
         self.details_frame.grid_columnconfigure(0, weight=1)
-        self.details_frame.grid_rowconfigure(1, weight=1)  # Content row
+        self.details_frame.grid_rowconfigure(1, weight=0)  # Content row
         
         # Match details label
         self.details_label = ctk.CTkLabel(
@@ -142,7 +143,7 @@ class NextRoundTab(BaseTab):
         # Match details content
         self.details_content = ctk.CTkTextbox(
             self.details_frame,
-            height=250,  # Increased height to accommodate larger font
+            height=2,  # Increased height to accommodate larger font
             font=ctk.CTkFont(size=self.settings_manager.get_font_size())  # Use font size from settings
         )
         self.details_content.grid(row=1, column=0, padx=10, pady=10, sticky="ew")

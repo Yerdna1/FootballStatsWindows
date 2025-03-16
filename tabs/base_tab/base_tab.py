@@ -8,6 +8,9 @@ from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.translations import translate
+from tabs.base_tab.table_utils import TableUtils
+from tabs.base_tab.tooltip import ToolTip
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ class BaseTab:
         
         # Create main frame
         self.main_frame = ctk.CTkFrame(self.parent)
-        self.main_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
         
         # Configure grid for parent
         self.parent.grid_columnconfigure(0, weight=1)
@@ -88,126 +91,7 @@ class BaseTab:
             self.footer_frame.grid_forget()
             self.use_footer = False
         
-    def create_table(self, parent, columns, height=200):
-        """
-        Create a table widget.
-        
-        Args:
-            parent: Parent widget
-            columns: List of column names
-            height: Table height
-            
-        Returns:
-            ttk.Treeview: Table widget
-        """
-        # This is the recommended method to use
-        # No warning needed since this is the preferred method
-        
-        # Create a frame for the table and scrollbar
-        frame = ctk.CTkFrame(parent)
-        
-        # Use grid instead of pack
-        # frame.pack(fill="both", expand=True, padx=10, pady=10)
-        frame.grid(sticky="nsew", padx=10, pady=10)
-        
-        # Configure the frame's grid
-        frame.grid_rowconfigure(0, weight=1)
-        frame.grid_columnconfigure(0, weight=1)
-        
-        # Create the table
-        table = ttk.Treeview(frame, columns=columns, show="headings", height=height)
-        
-        # Set column headings
-        for col in columns:
-            table.heading(col, text=col)
-            table.column(col, width=100)
-        
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=table.yview)
-        table.configure(yscrollcommand=scrollbar.set)
-        
-        # Position table and scrollbar with grid instead of pack
-        table.grid(row=0, column=0, sticky="nsew")
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        
-        return table
-        
-    def _create_table(self, parent, columns, height=400):
-        """Create a table with the given columns and increased font size
-        
-        Note: This is the older implementation, kept for backward compatibility.
-        Consider using create_table() instead.
-        """
-        logger.warning("Using deprecated _create_table method, consider using create_table instead")
-        
-        # Create frame for table
-        frame = ctk.CTkFrame(parent)
-        
-        # Configure the frame's grid
-        frame.grid_rowconfigure(0, weight=1)
-        frame.grid_columnconfigure(0, weight=1)
-        
-        # Configure style for larger font
-        style = ttk.Style()
-        font_size = self.settings_manager.get_font_size()  # Get font size from settings
-        style.configure("Treeview", font=('Helvetica', font_size))  # Use font size from settings
-        style.configure("Treeview.Heading", font=('Helvetica', 28, 'bold'))  # Increase header font size
-        style.configure("Treeview", rowheight=max(60, int(font_size * 1.2)))  # Adjust row height based on font size
-        
-        # Create treeview
-        table = ttk.Treeview(frame, columns=[f"col{i}" for i in range(len(columns))], show="headings", height=height)
-        
-        # Configure columns
-        for i, col in enumerate(columns):
-            # Handle both string and dict columns
-            if isinstance(col, dict):
-                col_text = col.get("text", f"Column {i}")
-                col_width = col.get("width", 100)
-            else:
-                col_text = col
-                col_width = 100
-                
-            table.heading(f"col{i}", text=col_text)
-            table.column(f"col{i}", width=col_width, anchor="center")
-        
-        # Add scrollbars
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=table.yview)
-        hsb = ttk.Scrollbar(frame, orient="horizontal", command=table.xview)
-        table.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-        
-        # Grid layout
-        table.grid(column=0, row=0, sticky="nsew")
-        vsb.grid(column=1, row=0, sticky="ns")
-        hsb.grid(column=0, row=1, sticky="ew")
-        
-        # Configure grid weights
-        frame.grid_columnconfigure(0, weight=1)
-        frame.grid_rowconfigure(0, weight=1)
-        
-        # Add sorting functionality
-        try:
-            from modules.table_sorter import TableSorter
-            sorter = TableSorter(table)
-            table.sorter = sorter
-            
-            # Apply default sort by date if a date column exists
-            date_columns = ["date", "time", "timestamp", "created", "modified"]
-            for i, col in enumerate(columns):
-                col_text = col.get("text", "") if isinstance(col, dict) else col
-                col_text = str(col_text).lower()
-                if any(date_name in col_text for date_name in date_columns):
-                    sorter.apply_initial_sort(f"col{i}", reverse=True)
-                    break
-        except Exception as e:
-            logger.error(f"Failed to add sorting functionality: {str(e)}")
-        
-        # For backward compatibility, return just the table
-        # But also provide the frame as an attribute that can be accessed if needed
-        table.container_frame = frame
-        
-        return table
-        
-    def _create_title(self, text, font_size=24):
+    def _create_title(self, text, font_size=18):
         """Create a title label with refresh button"""
         # Configure grid for header_frame if not already done
         if not hasattr(self.header_frame, '_grid_configured'):
@@ -367,125 +251,21 @@ class BaseTab:
         
         # This method should be overridden by subclasses to update specific UI elements
         pass
-    
-    def create_sortable_table(self, parent, columns, height=400):
-        """Create a sortable table with the given columns and increased font size."""
-        table = self._create_table(parent, columns, height)
         
-        # Return both the frame and the table
-        return table.container_frame, table
+    # Table creation methods - delegated to TableUtils
+    
+    def create_table(self, parent, columns, height=400):
+        """Create a table widget with the given columns"""
+        return TableUtils.create_table(parent, columns, height, self.settings_manager)
+        
+    def _create_table(self, parent, columns, height=400):
+        """Create a table with the given columns (legacy method)"""
+        return TableUtils.create_legacy_table(parent, columns, height, self.settings_manager)
+        
+    def create_sortable_table(self, parent, columns, height=400):
+        """Create a sortable table with the given columns"""
+        return TableUtils.create_sortable_table(parent, columns, height, self.settings_manager)
     
     def _create_sortable_table(self, parent, columns=None, height=10):
-        """Create a sortable treeview table with column headers."""
-        # Create a frame to hold the treeview and scrollbars
-        frame = ctk.CTkFrame(parent)
-        
-        # Create horizontal and vertical scrollbars
-        h_scrollbar = ttk.Scrollbar(frame, orient="horizontal")
-        v_scrollbar = ttk.Scrollbar(frame, orient="vertical")
-        
-        # Configure the treeview
-        table = ttk.Treeview(
-            frame,
-            columns=[col["text"] for col in columns] if columns else [],
-            height=height,
-            selectmode="extended",
-            yscrollcommand=v_scrollbar.set,
-            xscrollcommand=h_scrollbar.set
-        )
-        
-        # Configure scrollbars
-        h_scrollbar.configure(command=table.xview)
-        v_scrollbar.configure(command=table.yview)
-        
-        # Place scrollbars
-        v_scrollbar.pack(side="right", fill="y")
-        h_scrollbar.pack(side="bottom", fill="x")
-        
-        # Place treeview
-        table.pack(side="left", fill="both", expand=True)
-        
-        # Configure column headings and widths
-        table.column("#0", width=0, stretch=False)  # Hidden ID column
-        table.heading("#0", text="", anchor="w")
-        
-        if columns:
-            for i, col in enumerate(columns):
-                # Use column ID as the index (easier for sorting)
-                col_id = col.get("id", str(i))
-                table.column(i, width=col.get("width", 100), stretch=col.get("stretch", True))
-                table.heading(i, text=col.get("text", ""), anchor=col.get("anchor", "w"))
-        
-        # Import and initialize the TableSorter
-        from modules.table_sorter import TableSorter
-        sorter = TableSorter(table)
-        
-        # Store the sorter reference in the table for future access
-        table.sorter = sorter
-        
-        # Apply default sort by date if a date column exists
-        if columns:
-            # Look for date columns - common names
-            date_columns = ["date", "time", "timestamp", "created", "modified"]
-            for i, col in enumerate(columns):
-                col_text = col.get("text", "").lower()
-                if any(date_name in col_text for date_name in date_columns):
-                    # Found a date column, sort by it (newest first)
-                    sorter.apply_initial_sort(str(i), reverse=True)
-                    break
-        
-        return frame, table
-    
-    
-    
-
-
-
-
-class ToolTip:
-    """Custom tooltip implementation"""
-    def __init__(self, widget, text):
-        self.widget = widget
-        self.text = text
-        self.tooltip_window = None
-        
-        # Bind events
-        self.widget.bind("<Enter>", self.on_enter)
-        self.widget.bind("<Leave>", self.on_leave)
-        self.widget.bind("<ButtonPress>", self.on_leave)
-        
-    def on_enter(self, event=None):
-        """Show tooltip when mouse enters widget"""
-        x, y, _, _ = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 25
-        
-        # Create tooltip window
-        self.tooltip_window = tk.Toplevel(self.widget)
-        self.tooltip_window.wm_overrideredirect(True)
-        self.tooltip_window.wm_geometry(f"+{x}+{y}")
-        
-        # Configure grid for tooltip window
-        self.tooltip_window.grid_columnconfigure(0, weight=1)
-        self.tooltip_window.grid_rowconfigure(0, weight=1)
-        
-        # Create tooltip label
-        label = tk.Label(
-            self.tooltip_window,
-            text=self.text,
-            justify="left",
-            background="#ffffe0",
-            relief="solid",
-            borderwidth=1,
-            font=("Helvetica", 12)
-        )
-        label.grid(row=0, column=0, padx=2, pady=2)
-        
-    def on_leave(self, event=None):
-        """Hide tooltip when mouse leaves widget"""
-        if self.tooltip_window:
-            self.tooltip_window.destroy()
-            self.tooltip_window = None
-    
-    
-    
+        """Create an advanced sortable table with column headers"""
+        return TableUtils.create_advanced_sortable_table(parent, columns, height)

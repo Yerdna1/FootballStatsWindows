@@ -5,11 +5,12 @@ Main Database View tab class that integrates UI, handlers, and table configurati
 import tkinter as tk
 import logging
 
-from tabs.base_tab import BaseTab
+
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 
+from tabs.base_tab.base_tab import BaseTab
 from tabs.db_view.ui import DbViewUI
 from tabs.db_view.handlers import DbViewHandlers
 

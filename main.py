@@ -50,10 +50,17 @@ logging.getLogger('tabs.form').setLevel(logging.DEBUG)
 logging.getLogger('modules.api_client').setLevel(logging.DEBUG)
 logging.getLogger('modules.form_analyzer').setLevel(logging.DEBUG)
 
+
+#ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+try:
+    ctk.set_default_color_theme(r"C:\___WORK\football_stats\custom_theme.json")
+except Exception as e:
+    print(f"Error loading custom theme: {e}")
+    #ctk.set_default_color_theme("blue")  # Fallback to default theme
+
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
-ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
-
+ctk.set_default_color_theme("green")  # Fallback to default theme
 class FootballStatsApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -98,7 +105,7 @@ class FootballStatsApp(ctk.CTk):
         
         # Create main container
         self.main_container = ctk.CTkFrame(self)
-        self.main_container.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        self.main_container.pack(fill="both", expand=True, padx=2, pady=(0, 10))
         
         # Configure notebook style for larger font
         style = ttk.Style()

@@ -12,8 +12,8 @@ import threading
 import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable
+from tabs.base_tab.base_tab import BaseTab
 
-from tabs.base_tab import BaseTab
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager

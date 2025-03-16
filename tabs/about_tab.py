@@ -5,11 +5,11 @@ import logging
 from typing import Dict, List, Any, Optional, Callable
 import webbrowser
 
-from tabs.base_tab import BaseTab
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.translations import translate
+from tabs.base_tab.base_tab import BaseTab
 
 logger = logging.getLogger(__name__)
 

@@ -4,11 +4,12 @@ from tkinter import ttk
 import logging
 from typing import Dict, List, Any, Optional, Callable
 
-from tabs.base_tab import BaseTab
+
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.league_names import get_league_options, get_league_display_name
+from tabs.base_tab.base_tab import BaseTab
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +42,12 @@ class WinlessTab(BaseTab):
         
         # Configure grid for content_frame
         self.content_frame.grid_columnconfigure(0, weight=1)
-        self.content_frame.grid_rowconfigure(1, weight=0)  # Controls row
-        self.content_frame.grid_rowconfigure(2, weight=1)  # Table row
+        self.content_frame.grid_rowconfigure(0, weight=0)  # Controls row
+        self.content_frame.grid_rowconfigure(1, weight=1)  # Table row
         
         # Controls section
         self.controls_frame = ctk.CTkFrame(self.content_frame)
-        self.controls_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.controls_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
         # Configure grid for controls_frame
         self.controls_frame.grid_columnconfigure(0, weight=1)  # League frame
@@ -116,7 +117,7 @@ class WinlessTab(BaseTab):
         
         # Create tables frame
         self.tables_frame = ctk.CTkFrame(self.content_frame)
-        self.tables_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+        self.tables_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         
         # Configure grid for tables_frame
         self.tables_frame.grid_columnconfigure(0, weight=1)

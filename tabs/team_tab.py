@@ -4,11 +4,11 @@ from tkinter import ttk
 import logging
 from typing import Dict, List, Any, Optional, Callable
 
-from tabs.base_tab import BaseTab
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.league_names import get_league_options, get_league_display_name
+from tabs.base_tab.base_tab import BaseTab
 
 logger = logging.getLogger(__name__)
 

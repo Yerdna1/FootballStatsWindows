@@ -7,11 +7,11 @@ from typing import Dict, List, Any, Optional, Callable
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from tabs.base_tab import BaseTab
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.league_names import get_league_options, get_league_display_name
+from tabs.base_tab.base_tab import BaseTab
 
 logger = logging.getLogger(__name__)
 
@@ -267,18 +267,18 @@ class LeagueStatsTab(BaseTab):
             # Get league ID
             league_id = self.selected_league.get()
             
-            # Fetch standings with 2023 season (for 2023-2024 season)
+
             # Temporarily enable API fetching if it was disabled
             original_auto_fetch = self.api.disable_auto_fetch
             self.api.disable_auto_fetch = False
             
-            # Use 2023 season instead of 2024
+            # Use  season  of 2024
             url = f"{self.api.base_url}/standings"
-            params = {"league": league_id, "season": 2023}
+            params = {"league": league_id, "season": 2024}
             
             # Make direct request to ensure we get fresh data
             try:
-                logger.info(f"Fetching standings for league {league_id} with season 2023")
+                logger.info(f"Fetching standings for league {league_id} with season 2024")
                 response = requests.get(url, headers=self.api.headers, params=params, timeout=10)
                 
                 if response.status_code == 200:

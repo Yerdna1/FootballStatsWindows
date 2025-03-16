@@ -5,11 +5,12 @@ Main StatsTab class that integrates UI, handlers, and chart components.
 import tkinter as tk
 import logging
 
-from tabs.base_tab import BaseTab
+
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 
+from tabs.base_tab.base_tab import BaseTab
 from tabs.stats_tab.ui import StatsTabUI
 from tabs.stats_tab.handlers import StatsTabHandlers
 from tabs.stats_tab.charts import StatsCharts

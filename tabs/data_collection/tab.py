@@ -5,11 +5,12 @@ Main Data Collection tab class that integrates UI, handlers, and export function
 import tkinter as tk
 import logging
 
-from tabs.base_tab import BaseTab
+
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 
+from tabs.base_tab.base_tab import BaseTab
 from tabs.data_collection.ui import DataCollectionUI
 from tabs.data_collection.handlers import DataCollectionHandlers
 from tabs.data_collection.export import DataCollectionExport

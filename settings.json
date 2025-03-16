@@ -1,7 +1,7 @@
 {
-    "appearance_mode": "Dark",
+    "appearance_mode": "Light",
     "color_theme": "green",
-    "form_length": 3,
+    "form_length": 5,
     "threshold": 0.75,
     "auto_refresh": false,
     "refresh_interval": 30,
@@ -10,7 +10,7 @@
     ],
     "prediction_threshold_level1": 0.75,
     "prediction_threshold_level2": 1.05,
-    "font_size": 64,
+    "font_size": 30,
     "language": "sk",
     "firebase_config": {
         "apiKey": "",

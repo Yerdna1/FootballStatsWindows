@@ -5,12 +5,12 @@ import logging
 import tkinter as tk
 import customtkinter as ctk
 
-from tabs.base_tab import BaseTab
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 from modules.firebase_auth import FirebaseAuth
 
+from tabs.base_tab.base_tab import BaseTab
 from tabs.login.ui.login_form import LoginForm
 from tabs.login.ui.signup_form import SignupForm
 from tabs.login.ui.admin_panel import AdminPanel

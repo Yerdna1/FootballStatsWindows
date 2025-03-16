@@ -5,11 +5,12 @@ Main Form Analysis tab class that integrates UI, handlers, and predictions.
 import tkinter as tk
 import logging
 
-from tabs.base_tab import BaseTab
+
 from modules.api_client import FootballAPI
 from modules.db_manager import DatabaseManager
 from modules.settings_manager import SettingsManager
 
+from tabs.base_tab.base_tab import BaseTab
 from tabs.form.ui import FormUI
 from tabs.form.handlers import FormHandlers
 from tabs.form.predictions import FormPredictions
