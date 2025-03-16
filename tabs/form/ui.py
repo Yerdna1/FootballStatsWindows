@@ -17,14 +17,15 @@ class FormUI:
         """Create the form tab UI elements"""
         # Configure grid for content_frame
         content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(2, weight=1)  # Row for notebook
+        content_frame.grid_rowconfigure(0, weight=0)  # Row for controls (no expansion)
+        content_frame.grid_rowconfigure(1, weight=1)  # Row for notebook (expands to fill space)
         
         # Title
         create_title_func("Form Analysis")
         
         # Controls section
         controls_frame = ctk.CTkFrame(content_frame)
-        controls_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        controls_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")  # Changed to row 0
         
         # Configure grid for controls_frame
         controls_frame.grid_columnconfigure(0, weight=1)  # League frame
@@ -65,7 +66,7 @@ class FormUI:
         
         # Create notebook for tables
         notebook = ttk.Notebook(content_frame)
-        notebook.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        notebook.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")  # Keep in row 1
         
         # Form Analysis Tab
         form_analysis_frame, form_analysis_table = self._create_form_analysis_tab(

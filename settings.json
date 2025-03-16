@@ -6,7 +6,7 @@
     "auto_refresh": false,
     "refresh_interval": 30,
     "leagues": [
-        -1
+        39
     ],
     "prediction_threshold_level1": 0.75,
     "prediction_threshold_level2": 1.05,
