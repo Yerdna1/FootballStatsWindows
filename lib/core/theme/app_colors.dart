@@ -155,17 +155,17 @@ class AppColors {
   );
   
   // Shadow Colors
-  static const List<BoxShadow> cardShadow = [
+  static const List<BoxShadow> cardShadowList = [
     BoxShadow(
-      color: cardShadow,
+      color: AppColors.cardShadow,
       blurRadius: 10,
       offset: Offset(0, 4),
     ),
   ];
   
-  static const List<BoxShadow> elevatedCardShadow = [
+  static const List<BoxShadow> elevatedCardShadowList = [
     BoxShadow(
-      color: elevatedCardShadow,
+      color: AppColors.elevatedCardShadow,
       blurRadius: 20,
       offset: Offset(0, 8),
     ),

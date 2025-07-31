@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'fixture_model.freezed.dart';
-part 'fixture_model.g.dart';
 
 @freezed
 class FixtureModel with _$FixtureModel {
@@ -254,7 +253,7 @@ extension FixtureModelX on FixtureModel {
     return winner?.id != teamId && score!.winner != 'DRAW';
   }
 
-  bool isDraw => isFinished && score?.winner == 'DRAW';
+  bool get isDraw => isFinished && score?.winner == 'DRAW';
 
   int get totalGoals {
     if (score?.fullTime?.home != null && score?.fullTime?.away != null) {

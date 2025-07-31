@@ -7,6 +7,11 @@ class AppConstants {
   static const String baseUrl = 'https://api.football-data.org/v4';
   static const String firebaseBaseUrl = 'https://football-stats-app.firebaseapp.com';
   
+  // Football API Configuration (API-Football via RapidAPI)
+  static const String footballApiBaseUrl = 'https://api-football-v1.p.rapidapi.com/v3';
+  static const String footballApiHost = 'api-football-v1.p.rapidapi.com';
+  static const String footballApiKey = 'YOUR_RAPIDAPI_KEY_HERE'; // Replace with actual API key
+  
   // Storage Keys
   static const String userTokenKey = 'user_token';
   static const String themeKey = 'theme_mode';

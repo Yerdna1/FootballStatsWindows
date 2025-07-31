@@ -101,7 +101,7 @@ abstract class FixturesRepository {
   Future<Either<Failure, Map<String, dynamic>>> getMatchStatistics(int fixtureId);
 
   /// Get match timeline/events
-  Future<Either<Failure, List<Map<String, dynamic>>> getMatchEvents(int fixtureId);
+  Future<Either<Failure, List<Map<String, dynamic>>>> getMatchEvents(int fixtureId);
 
   /// Get match lineups
   Future<Either<Failure, Map<String, dynamic>>> getMatchLineups(int fixtureId);

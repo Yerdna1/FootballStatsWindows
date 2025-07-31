@@ -41,13 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'your-web-api-key',
-    appId: 'your-web-app-id',
-    messagingSenderId: 'your-messaging-sender-id',
-    projectId: 'your-project-id',
-    authDomain: 'your-project-id.firebaseapp.com',
-    storageBucket: 'your-project-id.appspot.com',
-    measurementId: 'your-measurement-id',
+    apiKey: 'AIzaSyCy-v3w216jacLfeMr5aN-juz-ppPjH69c',
+    appId: '1:514021937175:web:279e864851baac41b6cc52',
+    messagingSenderId: '514021937175',
+    projectId: 'futbalwindowsapp',
+    authDomain: 'futbalwindowsapp.firebaseapp.com',
+    storageBucket: 'futbalwindowsapp.appspot.com',
+    databaseURL: 'https://futbalwindowsapp-default-rtdb.europe-west1.firebasedatabase.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
