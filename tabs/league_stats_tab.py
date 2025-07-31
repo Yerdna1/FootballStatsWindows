@@ -272,13 +272,13 @@ class LeagueStatsTab(BaseTab):
             original_auto_fetch = self.api.disable_auto_fetch
             self.api.disable_auto_fetch = False
             
-            # Use  season  of 2024
+            # Use  season  of 2025
             url = f"{self.api.base_url}/standings"
-            params = {"league": league_id, "season": 2024}
+            params = {"league": league_id, "season": 2025}
             
             # Make direct request to ensure we get fresh data
             try:
-                logger.info(f"Fetching standings for league {league_id} with season 2024")
+                logger.info(f"Fetching standings for league {league_id} with season 2025")
                 response = requests.get(url, headers=self.api.headers, params=params, timeout=10)
                 
                 if response.status_code == 200:

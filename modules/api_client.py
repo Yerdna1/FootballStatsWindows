@@ -237,7 +237,7 @@ class FootballAPI:
             return None
 
         url = f"{self.base_url}/standings"
-        params = {"league": league_id, "season": 2024}
+        params = {"league": league_id, "season": 2025}
         results = self._batch_request(url, [params])
         data = results.get(json.dumps(params))
         if data:
@@ -245,7 +245,7 @@ class FootballAPI:
             return data
         return None
 
-    def fetch_fixtures(self, league_id, season='2024', team_id=None, fixture_id=None):
+    def fetch_fixtures(self, league_id, season='2025', team_id=None, fixture_id=None):
         """Optimized fixtures fetch with smarter caching"""
         cache_key = f'fixtures_{league_id}_{team_id}_{fixture_id}'
         
@@ -303,7 +303,7 @@ class FootballAPI:
         self._set_cache(cache_key, data, cache_type)
         return data
 
-    def fetch_teams(self, league_id, season='2024'):
+    def fetch_teams(self, league_id, season='2025'):
         """Fetch teams for a specific league with caching"""
         cache_key = f'teams_{league_id}_{season}'
         cached_data = self._get_from_cache(cache_key, 'medium')  # Teams don't change often
@@ -350,7 +350,7 @@ class FootballAPI:
         self._set_cache(cache_key, data, 'medium')
         return data
 
-    def fetch_players(self, league_id, season='2024', team_id=None, page=1):
+    def fetch_players(self, league_id, season='2025', team_id=None, page=1):
         """Fetch players for a specific league or team with caching"""
         cache_key = f'players_{league_id}_{team_id}_{season}_{page}'
         cached_data = self._get_from_cache(cache_key, 'medium')  # Players don't change often
@@ -377,7 +377,7 @@ class FootballAPI:
         self._set_cache(cache_key, data, 'medium')
         return data
 
-    def fetch_team_statistics(self, league_id, team_id, season='2024'):
+    def fetch_team_statistics(self, league_id, team_id, season='2025'):
         """Optimized team statistics fetch with null safety"""
         cache_key = f'team_stats_{league_id}_{team_id}'
         cached_data = self._get_from_cache(cache_key, 'medium')
@@ -424,7 +424,7 @@ class FootballAPI:
             self.logger.error(f"Error fetching team statistics for {team_id}: {str(e)}")
             return {}
 
-    def fetch_next_fixtures(self, league_id, season='2024'):
+    def fetch_next_fixtures(self, league_id, season='2025'):
         """Fetch next round of fixtures for a league with short-term caching"""
         cache_key = f'next_fixtures_{league_id}_{season}'
         cached_data = self._get_from_cache(cache_key, 'short')  # Short cache for upcoming fixtures
@@ -465,7 +465,7 @@ class FootballAPI:
             
         return []
         
-    def fetch_squad(self, team_id, season='2024'):
+    def fetch_squad(self, team_id, season='2025'):
         """Fetch squad data for a team with caching"""
         cache_key = f'squad_{team_id}_{season}'
         cached_data = self._get_from_cache(cache_key, 'medium')  # Squad doesn't change often

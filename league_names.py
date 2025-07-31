@@ -1,4 +1,4 @@
-# Auto-generated league names dictionary for 2024 season
+# Auto-generated league names dictionary for 2025 season
 ALL_LEAGUES = -1  # Special value for all leagues
 
 LEAGUE_NAMES = {

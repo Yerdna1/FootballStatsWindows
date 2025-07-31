@@ -95,7 +95,7 @@ class FootballDataFetcher:
 
         return {"active": False, "fixture_count": 0}
 
-    def find_active_leagues(self, season: int = 2024) -> List[Dict]:
+    def find_active_leagues(self, season: int = 2025) -> List[Dict]:
         """Find all leagues with active fixtures and players for given season"""
         active_leagues = []
         countries = self.get_countries()

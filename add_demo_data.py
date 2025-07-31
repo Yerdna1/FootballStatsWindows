@@ -110,7 +110,7 @@ def add_demo_data():
             league["name"],
             league["country"],
             "",
-            "2024",
+            "2025",
             datetime.now().isoformat()
         ))
     
