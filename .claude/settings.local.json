@@ -4,7 +4,9 @@
       "Bash(python test:*)",
       "Bash(del test_api.py)",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(flutter create:*)",
+      "Bash(flutter pub:*)"
     ],
     "deny": []
   }
