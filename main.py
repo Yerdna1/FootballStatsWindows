@@ -65,8 +65,8 @@ class FootballStatsApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         
-        # Initialize API client with auto-fetch disabled to prevent automatic API calls on login
-        self.api = FootballAPI(API_KEY, BASE_URL, disable_auto_fetch=True)
+        # Initialize API client to fetch real data from the API
+        self.api = FootballAPI(API_KEY, BASE_URL, disable_auto_fetch=False)
         
         # Initialize database manager
         self.db_manager = DatabaseManager("football_stats.db")

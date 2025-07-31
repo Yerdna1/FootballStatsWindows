@@ -1,0 +1,123 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions for authentication and authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/user_permissions/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/user_permissions/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isModerator() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/user_permissions/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/user_permissions/$(request.auth.uid)).data.role in ['admin', 'moderator'];
+    }
+    
+    function hasValidUserData() {
+      return request.resource.data.keys().hasAll(['email', 'display_name', 'created_at']) &&
+             request.resource.data.email is string &&
+             request.resource.data.display_name is string &&
+             request.resource.data.created_at is timestamp;
+    }
+
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && hasValidUserData();
+      allow update: if isOwner(userId) && 
+                       request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['display_name', 'preferences', 'last_login', 'updated_at']);
+      allow delete: if isAdmin();
+    }
+    
+    // User permissions - only admins can manage
+    match /user_permissions/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Leagues - read-only for users, write for moderators+
+    match /leagues/{leagueId} {
+      allow read: if true; // Public read access
+      allow write: if isModerator();
+    }
+    
+    // Teams - read-only for users, write for moderators+
+    match /teams/{teamId} {
+      allow read: if true; // Public read access
+      allow write: if isModerator();
+    }
+    
+    // Standings - read-only for users, write for moderators+
+    match /standings/{standingId} {
+      allow read: if true; // Public read access
+      allow write: if isModerator();
+    }
+    
+    // Fixtures - read-only for users, write for moderators+
+    match /fixtures/{fixtureId} {
+      allow read: if true; // Public read access
+      allow write: if isModerator();
+    }
+    
+    // Team statistics - read-only for users, write for moderators+
+    match /team_statistics/{statId} {
+      allow read: if true; // Public read access
+      allow write: if isModerator();
+    }
+    
+    // User favorites - users can manage their own favorites
+    match /user_favorites/{favoriteId} {
+      allow read: if isOwner(resource.data.user_id) || isAdmin();
+      allow create: if isAuthenticated() && 
+                       isOwner(request.resource.data.user_id) &&
+                       request.resource.data.keys().hasAll(['user_id', 'type', 'entity_id', 'created_at']);
+      allow update: if isOwner(resource.data.user_id);
+      allow delete: if isOwner(resource.data.user_id) || isAdmin();
+    }
+    
+    // Notifications - users can read their own notifications, moderators can create
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.user_id) || isAdmin();
+      allow create: if isModerator() && 
+                       request.resource.data.keys().hasAll(['user_id', 'title', 'message', 'type', 'created_at']);
+      allow update: if isOwner(resource.data.user_id) && 
+                       request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['read', 'read_at']);
+      allow delete: if isOwner(resource.data.user_id) || isAdmin();
+    }
+    
+    // Analytics cache - read-only for users, write for system functions
+    match /analytics_cache/{cacheId} {
+      allow read: if true; // Public read access for cached analytics
+      allow write: if false; // Only cloud functions can write
+    }
+    
+    // Activity logs - read for admins, write for system functions
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only cloud functions can write
+    }
+    
+    // Rate limiting collection - system use only
+    match /rate_limits/{limitId} {
+      allow read, write: if false; // Only cloud functions can access
+    }
+    
+    // API cache collection - system use only
+    match /api_cache/{cacheId} {
+      allow read: if true; // Public read access for cached data
+      allow write: if false; // Only cloud functions can write
+    }
+  }
+}

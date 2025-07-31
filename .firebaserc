@@ -1,0 +1,10 @@
+{
+  "projects": {
+    "default": "football-stats-app",
+    "development": "football-stats-dev",
+    "staging": "football-stats-staging",
+    "production": "football-stats-prod"
+  },
+  "targets": {},
+  "etags": {}
+}

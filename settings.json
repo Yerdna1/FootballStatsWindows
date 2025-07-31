@@ -6,11 +6,11 @@
     "auto_refresh": false,
     "refresh_interval": 30,
     "leagues": [
-        345
+        -1
     ],
     "prediction_threshold_level1": 0.75,
     "prediction_threshold_level2": 1.05,
-    "font_size": 36,
+    "font_size": 34,
     "language": "sk",
     "firebase_config": {
         "apiKey": "",
