@@ -930,10 +930,3 @@ class ScheduledOperation {
     required this.isEnabled,
   });
 }
-
-// Provider
-final dataCollectionServiceProvider = Provider<DataCollectionService>((ref) {
-  final api = ref.watch(productionFootballApiProvider);
-  final database = ref.watch(databaseBrowserServiceProvider);
-  return DataCollectionService(api, database);
-});

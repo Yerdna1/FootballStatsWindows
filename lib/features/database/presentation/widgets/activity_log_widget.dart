@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../database/providers/database_providers.dart';
+import '../../providers/database_providers.dart';
 
 /// Activity Log Widget - displays user activity and database operations
 class ActivityLogWidget extends ConsumerStatefulWidget {

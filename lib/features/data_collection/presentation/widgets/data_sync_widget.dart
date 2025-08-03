@@ -32,7 +32,7 @@ class _DataSyncWidgetState extends ConsumerState<DataSyncWidget> {
   @override
   Widget build(BuildContext context) {
     final syncStatusAsync = ref.watch(dataSyncStatusProvider);
-    final serviceState = ref.watch(dataCollectionServiceProvider);
+    final serviceState = ref.watch(dataCollectionServiceStateProvider);
     
     return SingleChildScrollView(
       controller: _scrollController,
@@ -633,27 +633,27 @@ class _DataSyncWidgetState extends ConsumerState<DataSyncWidget> {
 
   // Action methods
   void _syncAllData() {
-    ref.read(dataCollectionServiceProvider.notifier).syncAllData();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncAllData();
   }
 
   void _syncLeagues() {
-    ref.read(dataCollectionServiceProvider.notifier).syncLeagues();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncLeagues();
   }
 
   void _syncTeams() {
-    ref.read(dataCollectionServiceProvider.notifier).syncTeams();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncTeams();
   }
 
   void _syncFixtures() {
-    ref.read(dataCollectionServiceProvider.notifier).syncFixtures();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncFixtures();
   }
 
   void _syncStandings() {
-    ref.read(dataCollectionServiceProvider.notifier).syncStandings();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncStandings();
   }
 
   void _resetStatus() {
-    ref.read(dataCollectionServiceProvider.notifier).reset();
+    ref.read(dataCollectionServiceStateProvider.notifier).reset();
   }
 
   void _refreshStatus() {

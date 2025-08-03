@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../database/providers/database_providers.dart';
+import '../../providers/database_providers.dart';
 import '../../../../core/services/database_browser_service.dart';
 
 /// Schema Viewer Widget - displays detailed table schema information

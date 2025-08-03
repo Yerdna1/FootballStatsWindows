@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
 
-import '../../../database/providers/database_providers.dart';
+import '../../providers/database_providers.dart';
 
 /// SQL Query Executor Widget
 class QueryExecutorWidget extends ConsumerStatefulWidget {

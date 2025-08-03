@@ -425,7 +425,7 @@ class _DataCollectionPageState extends ConsumerState<DataCollectionPage>
 
   /// Sync all data
   void _syncAllData() {
-    ref.read(dataCollectionServiceProvider.notifier).syncAllData();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncAllData();
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Starting full data synchronization...')),
@@ -450,7 +450,7 @@ class _DataCollectionPageState extends ConsumerState<DataCollectionPage>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(dataCollectionServiceProvider.notifier).resetCache();
+              ref.read(dataCollectionServiceStateProvider.notifier).resetCache();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Cache reset successfully')),
               );
@@ -464,7 +464,7 @@ class _DataCollectionPageState extends ConsumerState<DataCollectionPage>
 
   /// Export logs
   void _exportLogs() {
-    ref.read(dataCollectionServiceProvider.notifier).exportLogs();
+    ref.read(dataCollectionServiceStateProvider.notifier).exportLogs();
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Exporting collection logs...')),
@@ -516,27 +516,27 @@ class _DataCollectionPageState extends ConsumerState<DataCollectionPage>
 
   /// Quick action methods
   void _syncLeagues() {
-    ref.read(dataCollectionServiceProvider.notifier).syncLeagues();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncLeagues();
     _showSyncMessage('Syncing leagues...');
   }
 
   void _syncTeams() {
-    ref.read(dataCollectionServiceProvider.notifier).syncTeams();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncTeams();
     _showSyncMessage('Syncing teams...');
   }
 
   void _syncFixtures() {
-    ref.read(dataCollectionServiceProvider.notifier).syncFixtures();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncFixtures();
     _showSyncMessage('Syncing fixtures...');
   }
 
   void _syncStandings() {
-    ref.read(dataCollectionServiceProvider.notifier).syncStandings();
+    ref.read(dataCollectionServiceStateProvider.notifier).syncStandings();
     _showSyncMessage('Syncing standings...');
   }
 
   void _generateStatistics() {
-    ref.read(dataCollectionServiceProvider.notifier).generateStatistics();
+    ref.read(dataCollectionServiceStateProvider.notifier).generateStatistics();
     _showSyncMessage('Generating statistics...');
   }
 
@@ -556,7 +556,7 @@ class _DataCollectionPageState extends ConsumerState<DataCollectionPage>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(dataCollectionServiceProvider.notifier).cleanData();
+              ref.read(dataCollectionServiceStateProvider.notifier).cleanData();
               _showSyncMessage('Cleaning data...');
             },
             child: const Text('Clean'),

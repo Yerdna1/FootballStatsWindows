@@ -1,6 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/data_collection_service.dart';
+import '../../../core/network/production_football_api.dart';
+import '../../../core/services/database_browser_service.dart';
+
+export '../../../core/network/production_football_api.dart' show ApiUsageStats;
 
 /// API Status Provider
 final apiStatusProvider = StateNotifierProvider<ApiStatusNotifier, AsyncValue<ApiStatusData>>((ref) {
@@ -48,20 +52,19 @@ class DataSyncStatusNotifier extends StateNotifier<AsyncValue<DataSyncStatus>> {
 
 /// API Usage Provider
 final apiUsageProvider = StateNotifierProvider<ApiUsageNotifier, AsyncValue<ApiUsageStats>>((ref) {
-  final service = ref.watch(dataCollectionServiceProvider);
-  return ApiUsageNotifier(service);
+  final apiService = ref.watch(productionFootballApiProvider);
+  return ApiUsageNotifier(apiService);
 });
 
 class ApiUsageNotifier extends StateNotifier<AsyncValue<ApiUsageStats>> {
-  final DataCollectionService _service;
+  final ProductionFootballApi _apiService;
 
-  ApiUsageNotifier(this._service) : super(const AsyncValue.loading());
+  ApiUsageNotifier(this._apiService) : super(const AsyncValue.loading());
 
   Future<void> loadUsageStats() async {
     state = const AsyncValue.loading();
     try {
-      final apiService = ref.read(productionFootballApiProvider);
-      final stats = apiService.getUsageStats();
+      final stats = _apiService.getUsageStats();
       state = AsyncValue.data(stats);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -69,8 +72,15 @@ class ApiUsageNotifier extends StateNotifier<AsyncValue<ApiUsageStats>> {
   }
 }
 
+/// Data Collection Service Provider (simple provider, not state notifier)
+final dataCollectionServiceProvider = Provider<DataCollectionService>((ref) {
+  final api = ref.watch(productionFootballApiProvider);
+  final database = ref.watch(databaseBrowserServiceProvider);
+  return DataCollectionService(api, database);
+});
+
 /// Data Collection Service State Provider
-final dataCollectionServiceProvider = StateNotifierProvider<DataCollectionServiceNotifier, DataCollectionServiceState>((ref) {
+final dataCollectionServiceStateProvider = StateNotifierProvider<DataCollectionServiceNotifier, DataCollectionServiceState>((ref) {
   final service = ref.watch(dataCollectionServiceProvider);
   return DataCollectionServiceNotifier(service);
 });

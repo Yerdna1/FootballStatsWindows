@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
-  runApp(const FootballStatsApp());
+// Import features
+import 'features/database/presentation/database_browser_page.dart';
+import 'features/data_collection/presentation/data_collection_page.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive
+  await Hive.initFlutter();
+  
+  runApp(
+    const ProviderScope(
+      child: FootballStatsApp(),
+    ),
+  );
 }
 
 class FootballStatsApp extends StatelessWidget {
@@ -31,44 +46,65 @@ class HomePage extends StatelessWidget {
         title: const Text('Football Stats'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.sports_soccer,
               size: 100,
-              color: Colors.blue,
+              color: Colors.green,
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Welcome to Football Stats!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               'Your comprehensive football statistics app',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
               ),
             ),
+            const SizedBox(height: 40),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DatabaseBrowserPage(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.storage),
+              label: const Text('Database Browser'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(200, 50),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DataCollectionPage(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.cloud_sync),
+              label: const Text('Data Collection'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(200, 50),
+              ),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Flutter app is running successfully!'),
-            ),
-          );
-        },
-        tooltip: 'Test',
-        child: const Icon(Icons.play_arrow),
       ),
     );
   }
